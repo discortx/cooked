@@ -19,15 +19,15 @@ export const SOUND_EFFECTS = [
 
 export const TIMINGS = {
     // Phase 1: 0% -> 90%
-    stage1_forward: 12000,
+    stage1_forward: 15000,
     // Phase 2: 90% -> 1%
     stage2_reverseFull: 5000,
     // Phase 3: 1% -> 95%
-    stage3_forward: 10000,
+    stage3_forward: 15000,
     // Phase 4: 95% -> 50%
     stage4_reverseHalf: 4000,
     // Phase 5: Draw flower from bar tip
-    stage5_flowerDraw: 6500,
+    stage5_flowerDraw: 8000,
     // Phase 6: Bar 50% -> 85%
     stage6_finalForward: 6000,
     // Phase 7: Vertical drop line grows from 85% point downward
@@ -35,7 +35,14 @@ export const TIMINGS = {
     // Phase 9: 3-second pause before jumpscare
     pauseBeforeJumpscare: 3000,
     // Phase 9: Jumpscare fade-in
-    jumpscareFadeIn: 100,
+    jumpscareFadeIn: 1000,
+    
+    // Additional delays
+    delayBeforeP2: 4000,
+    delayBeforeP3: 2000,
+    delayBeforeP4: 2000,
+    delayBeforeP5: 4000,
+    delayBeforeP7: 4000,
 
     barYFraction: 0.78,   // barY = window.innerHeight * this
     barThickness: 20,     // px — must match CSS height and SVG stroke-width
@@ -45,7 +52,7 @@ export const TIMINGS = {
     //             bud → main body → petal cluster → shadow → highlight →
     //             drooping petal → falling petal (last)
     flowerDrawOrder: [9, 10, 7, 8, 4, 3, 0, 2, 1, 5, 6],
-    flowerDrawPerPath: 450,   // ms per path stroke
+    flowerDrawPerPath: 565,   // ms per path stroke (scaled for ~8s total)
     flowerFillDelay: 180,     // ms for fill to fade after stroke
     flowerFallDuration: 1100, // ms for falling petal drop
 };

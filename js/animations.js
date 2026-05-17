@@ -196,7 +196,7 @@ export class Animations {
         this.video.muted  = false;
         this.video.play().catch(e => console.error('Jumpscare play failed:', e));
 
-        this.video.style.transition    = `opacity ${TIMINGS.jumpscareFadeIn}ms linear`;
+        this.video.style.transition    = `opacity ${TIMINGS.jumpscareFadeIn}ms ease-in`;
         this.video.style.opacity       = '1';
         this.video.style.pointerEvents = 'auto';
 

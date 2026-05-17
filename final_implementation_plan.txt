@@ -9,15 +9,21 @@ SECTION 0 — CONFIRMED BEHAVIOUR (READ BEFORE TOUCHING ANY FILE)
 
 The animation is a single continuous "growing line" with these exact phases:
 
-  P1  Line grows  0 % → 90 %   (false hope, ~12 s)
-  P2  Line shrinks 90 % → 1 %  (cruel reversal, ~5 s)
-  P3  Line grows  1 % → 95 %   (second hope, ~10 s)
-  P4  Line shrinks 95 % → 50 % (tease, ~4 s)
-  P5  Line PAUSES at 50 %. Flower draws in at the bar tip.  (~6.5 s)
-  P6  Line resumes from 50 % → 85 %, passing UNDER flower.  (~6 s)
+  P1  Line grows  0 % → 90 %   (false hope, 15 s)
+      [4-second pause]
+  P2  Line shrinks 90 % → 1 %  (cruel reversal, 5 s)
+      [2-second pause]
+  P3  Line grows  1 % → 95 %   (second hope, 15 s)
+      [2-second pause]
+  P4  Line shrinks 95 % → 50 % (tease, 4 s)
+      [4-second pause]
+  P5  Line PAUSES at 50 %. Flower draws in at the bar tip.  (8 s)
+      Flower is rendered completely black, growing outward from the base.
+  P6  Line resumes from 50 % → 85 %, passing UNDER flower.  (6 s)
       Flower is layered ABOVE the line the entire time.
       The line tip "touches the flower stem" as it passes through.
-  P7  At 85 % the line turns 90° and grows DOWNWARD off-screen. (~1.5 s)
+      [4-second pause at 85%]
+  P7  At 85 % the line turns 90° and grows DOWNWARD off-screen. (1.5 s)
       Both the horizontal line and the vertical drop stay visible.
       The flower stays at the 50 % position, visible the entire time.
   P8  3-second pause.
@@ -429,16 +435,16 @@ SECTION 5 — FLOWER ALIGNMENT DETAIL (critical, verify after first render)
 ────────────────────────────────────────────────────────────────────────────────
 
 The flower SVG internal coordinate system is 128×128 (viewBox).
-Rendered size is 260×260 px (square, no distortion).
+Rendered size is 350×350 px (square, no distortion).
 The group has transform="rotate(-8 56 122)" applied.
 
 Stem base BEFORE rotation: SVG local (56, 122)
-  → screen local: x = (56/128)*260 ≈ 113 px from left of container
-                  y = (122/128)*260 ≈ 248 px from top of container
+  → screen local: x = (56/128)*350 ≈ 153.1 px from left of container
+                  y = (122/128)*350 ≈ 333.6 px from top of container
 
 Container placement formula:
-  container.left = tipX - 113
-  container.top  = tipY - 248
+  container.left = tipX - 153.1
+  container.top  = tipY - 333.6
 
 After rotation (-8° around point 56,122), the stem base stays at (56,122)
 because that is the pivot point. No offset correction needed for rotation.

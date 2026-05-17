@@ -12,74 +12,63 @@ to the bottom of the screen before a jumpscare video fires.
 
 ### Phase 1 — False Hope (0% → 90%)
 - Progress bar animates from 0% to **90%** of screen width.
-- Speed: moderately fast (~8 s) so the user thinks they're nearly there.
+- Duration: **15 s**
 
 ### Phase 2 — Cruel Reversal (90% → 1%)
 - Bar retreats all the way back to **1%** (almost fully gone).
-- Speed: faster than phase 1 (~3 s) — sudden, demoralizing.
+- Duration: **5 s**
+- **Delay:** 2-second pause before Phase 3 begins.
 
 ### Phase 3 — Second Attempt (1% → 95%)
 - Bar marches forward again, reaching **95%** this time — SO close.
-- Speed: similar to phase 1 (~7 s).
+- Duration: **15 s**
 
 ### Phase 4 — Tease Pull-back to 50% (95% → 50%)
 - Bar retreats to the **50% mark** (exact horizontal center of screen).
-- Speed: medium (~2.5 s).
+- Duration: **4 s**
+- **Delay:** 2-second pause before Phase 5 begins.
 
-### Phase 5 — Flower Sprouts from the Bar (~7 s total)
+### Phase 5 — Flower Sprouts from the Bar
+- Duration: **8 s**
 
 This is the core visual effect.
-
-#### Setup
-- At 50%, the bar tip is sitting at the center of the screen horizontally,
-  on the progress bar Y position (lower third of screen).
+- At 50%, the bar tip is sitting at the center of the screen horizontally.
 - The flower SVG is positioned so its bottom aligns with the bar line.
-  The stem appears to grow upward directly out of the tip of the bar.
+- The stem paths have been manually re-ordered in HTML so the draw animation correctly grows **outward and upward** from the base.
+- Draw order (bottom to top, falling petal last):
+  1. fp-9 — main stem
+  2. fp-10 — lower stem branch
+  3. fp-7 — left leaf
+  4. fp-8 — right leaf
+  5. fp-4 — green bud at stem tip
+  6. fp-3 — main flower head body
+  7. fp-0 — petal cluster top
+  8. fp-2 — petal shadow
+  9. fp-1 — petal highlight
+  10. fp-5 — right drooping petal
+  11. fp-6 — falling petal (drawn last, then falls with gravity)
 
-#### Draw-in Animation (stroke-dashoffset technique)
-Draw order (bottom to top, falling petal last):
-1. fp-9 — main stem
-2. fp-10 — lower stem branch
-3. fp-7 — left leaf
-4. fp-8 — right leaf
-5. fp-4 — green bud at stem tip
-6. fp-3 — main flower head body
-7. fp-0 — petal cluster top
-8. fp-2 — petal shadow
-9. fp-1 — petal highlight
-10. fp-5 — right drooping petal
-11. fp-6 — falling petal (drawn last, then falls with gravity)
-
-#### Colors (CHANGED from original SVG)
-Stem (fp-9, fp-10, fp-7, fp-8, fp-4): #1a1a1a — same black as the progress bar
-Petals (yellow palette):
-- fp-3 (main body):        #d4a017  dark gold
-- fp-0 (petal cluster):    #e8b84b  warm yellow
-- fp-2 (shadow petal):     #b8860b  dark goldenrod
-- fp-1 (highlight petal):  #f5d060  light yellow
-- fp-5 (drooping petal):   #c9960c  amber
-- fp-6 (falling petal):    #f0c040  golden yellow
+#### Colors
+- **Entire Flower:** `#000000` (Pure Black). Every single path of the flower is identical in color to the progress bar to make it look like the bar physically morphed into the flower.
 
 ### Phase 6 — Flower Stays, Bar Continues (50% → 85%)
-- Flower stays on screen.
-- Progress bar reappears at 50% and advances to 85%.
-- Duration: ~4 s.
+- Flower stays on screen perfectly anchored at 50%.
+- Progress bar advances to 85%.
+- Duration: **6 s**
+- **Delay:** 2-second pause before the line drops.
 
 ### Phase 7 — Line Changes Direction at 85%
-At 85% the SVG path bends downward. The horizontal bar stays frozen at 85%,
-and a NEW vertical segment (#drop-path) grows downward from that exact 85% point
-toward and past the bottom of the screen. This is done by animating a second
-SVG path using stroke-dashoffset (same technique as the flower draw-in).
+- Duration: **1.5 s**
+- At 85% the horizontal bar stays frozen.
+- A vertical segment (#drop-path) grows downward from that exact 85% point past the bottom of the screen.
 
-### Phase 8 — Flower Slides to Bottom Edge
-The wilted flower div CSS-transforms downward alongside the growing vertical line,
-arriving at the bottom of the viewport. It stays there.
-Duration: ~1.5 s.
+### Phase 8 — Pause
+- **3-second pause** while the user stares at the completed screen.
+*(Note: the original plan to slide the flower downward alongside the drop line has been scrapped; the flower remains fixed at 50%.)*
 
-### Phase 9 — 3-Second Pause, then Jumpscare
-After the flower arrives at the bottom, a 3-second pause.
-Then the jumpscare video fades in at full volume.
-On video end → redirect to chaos-login.html.
+### Phase 9 — Jumpscare
+- The jumpscare video fades in at full volume.
+- On video end → redirect to chaos-login.html.
 
 ---
 
