@@ -653,6 +653,7 @@
             font-size: 0.92rem;
             line-height: 1.5;
             background: #fffbe7;
+            color: #000;
         }
 
         .tc-scroll h4 {
@@ -798,39 +799,7 @@
             margin-top: 6px;
         }
 
-        /* ============ Teleporting Submit Button ============ */
-        const btn=document.getElementById('submitBtn');
-        const loginForm=document.getElementById('login-form');
-        let teleportCount=0;
 
-        loginForm.addEventListener('mousemove', (e)=> {
-                if (teleportCount >=8) return;
-
-                const rect=btn.getBoundingClientRect();
-                const btnCenterX=rect.left + rect.width / 2;
-                const btnCenterY=rect.top + rect.height / 2;
-                const dist=Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
-
-                if (dist < 80) {
-                    teleportCount++;
-                    const formRect=loginForm.getBoundingClientRect();
-                    const newX=Math.random() * Math.max(0, (formRect.width - rect.width));
-                    const newY=Math.random() * Math.max(0, (formRect.height - rect.height));
-                    if(btn) btn.style.position='absolute';
-                    btn.style.left=newX + 'px';
-                    btn.style.top=newY + 'px';
-                    btn.style.margin='0';
-                }
-
-                if (teleportCount >=8) {
-                    btn.classList.add('frozen');
-                    if(btn) btn.style.position='';
-                    btn.style.left='';
-                    btn.style.top='';
-                    btn.style.margin='';
-                    btn.textContent='Fine. You win. For now.';
-                }
-            });
 
         .rules-list li.bad {
             color: #ff5555;
@@ -1245,6 +1214,8 @@
                 </div>
             </div>
 
+            <a class="forgot" id="forgotLink">Forgot Password?</a>
+
             <div class="bottom-nav">
                 Already have an account? Please <a href="login.html" class="nav-link" id="goLoginBottom">click HERE</a> to GO to the
                 <span class="nav-faded" id="goLoginFaded">login page</span>
@@ -1274,7 +1245,6 @@
             Already Clicked Agree</p>
         <p style="text-align:center;color:#ff6600;font-size:0.85rem;margin:2px 0;">Please read all 47 pages. Nobody
             will. That is fine. We planned for this.</p>
-        </div>
         <h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">PREAMBLE: BEFORE
             WE BEGIN, A WARNING</h4>
         <p>This document is the result of many hours of work by a legal team that does not exist, reviewed by counsel
@@ -2011,7 +1981,9 @@
         (function swapFields() {
             const slot1 = document.getElementById('fieldSlot1');
             const slot2 = document.getElementById('fieldSlot2');
-            const user = document.getElementById('tplUser').content.cloneNode(true);
+            const tplUser = document.getElementById('tplUser');
+            if (!slot1 || !slot2 || !tplUser) return;
+            const user = tplUser.content.cloneNode(true);
             const pass = document.getElementById('tplPass').content.cloneNode(true);
             if (Math.random() < 0.5) {
                 slot1.appendChild(user);
@@ -2051,11 +2023,11 @@
 
         /* ============ Drifting Submit Button ============ */
         const btn = document.getElementById('submitBtn');
-        const formCard = document.getElementById('login-form');
+        const formCard = document.getElementById('signupWrap');
         let escapeCount = 0;
         const maxEscapes = 16;
 
-        formCard.style.position = 'relative';
+        if (formCard) formCard.style.position = 'relative';
 
         if(btn) btn.addEventListener('mouseenter', () => {
             if (escapeCount >= maxEscapes) return;
@@ -2562,7 +2534,11 @@
         (function buildTC() {
             const scroll = document.getElementById('tcScroll');
             const tmpl = document.getElementById('tcContent');
-            scroll.innerHTML = tmpl ? tmpl.innerHTML : '<p>Terms loading...</p>';
+            if (tmpl) {
+                scroll.appendChild(tmpl.content.cloneNode(true));
+            } else {
+                scroll.innerHTML = '<p>Terms loading...</p>';
+            }
 
             const progress = document.getElementById('tcProgress');
             const agree = document.getElementById('tcAgree');
@@ -2662,10 +2638,12 @@
 
         /* Login time-based tilt — drifts ±6deg over time while on login page */
         (function loginTimeTilt() {
-            const loginWrap = document.getElementById('login-form');
+            const loginWrap = document.getElementById('signupWrap');
+            if (!loginWrap) return;
             let deg = 0, dir = 1;
             setInterval(() => {
-                if (!document.getElementById('pageLogin').classList.contains('active')) return;
+                const p = document.getElementById('pageSignup');
+                if (!p || !p.classList.contains('active')) return;
                 deg += 0.15 * dir;
                 if (deg > 6) dir = -1;
                 if (deg < -3) dir = 1;
@@ -2805,7 +2783,7 @@
         if (goSignupFaded) goSignupFaded.addEventListener('click', () => showPage('pageSignup'));
         ['goLogin', 'goLoginFaded'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('click', () => showPage('pageLogin'));
+            if (el) el.addEventListener('click', () => window.location.href = 'login.html');
         });
 
         const _suPhoneEl = document.getElementById('suPhone');

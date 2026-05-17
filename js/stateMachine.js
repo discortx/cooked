@@ -68,6 +68,6 @@ export class StateMachine {
 
     end() {
         console.log('[END] Redirect');
-        window.location.href = 'login.html';
+        window.location.href = 'signup.html';
     }
 }
