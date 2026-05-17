@@ -9,21 +9,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    overflow-x: hidden;
+  }
   html, body {
     margin: 0; padding: 0;
     min-height: 100vh;
     font-family: 'Comic Neue', 'Comic Sans MS', cursive;
-    overflow-x: hidden;
     color: #fff;
   }
+  .page { display: none; }
+  .page.active { display: block; }
   body {
+    overflow-x: hidden;
     background:
       repeating-linear-gradient(
         45deg,
-        #ff00cc 0px, #ff00cc 30px,
-        #39ff14 30px, #39ff14 60px,
-        #ff6600 60px, #ff6600 90px,
-        #1a0033 90px, #1a0033 120px
+        #ffffff 0px, #ffffff 30px,
+        #ffffff 30px, #ffffff 60px,
+        #ffffff 60px, #ffffff 90px,
+        #ffffff 90px, #ffffff 120px
       );
     background-size: 200% 200%;
     animation: bgPulse 4s linear infinite;
@@ -39,15 +46,13 @@
     font-weight: normal;
   }
 
-  /* Floating emojis */
-  .floater {
-    position: fixed;
-    font-size: 2.4rem;
+  /* Bouncing images — absolute inside fixed stage container */
+  .bouncer {
+    position: absolute;
     pointer-events: none;
-    z-index: 1;
-    opacity: 0.85;
-    text-shadow: 0 0 10px #000;
+    opacity: 0.75;
     will-change: transform;
+    image-rendering: auto;
   }
 
   /* Wobble badge */
@@ -85,6 +90,9 @@
     border: 5px dotted #39ff14;
     border-radius: 18px;
     box-shadow: 0 0 30px #ff00cc, inset 0 0 25px #ff6600;
+  }
+  #login-form {
+    position: relative;
   }
   .wrap h1 {
     text-align: center;
@@ -148,15 +156,15 @@
 
   /* Submit button (drifter) */
   .submit-host {
-    position: relative;
+    position: static;
     min-height: 70px;
     margin-top: 20px;
   }
   #submitBtn {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
+    left: 0;
+    top: 0;
+    transform: none;
     padding: 14px 28px;
     background: linear-gradient(45deg, #ff00cc, #ff6600, #39ff14);
     background-size: 300% 300%;
@@ -168,7 +176,7 @@
     cursor: pointer;
     font-family: 'Comic Neue', cursive;
     box-shadow: 0 0 20px #ff00cc;
-    transition: left 0.18s ease-out, top 0.18s ease-out, transform 0.2s;
+    transition: left 0.1s ease-out, top 0.1s ease-out;
     animation: btnPulse 2.5s linear infinite;
     z-index: 5;
   }
@@ -428,6 +436,353 @@
     margin-left: 6px;
   }
 
+  /* ===== T&C Modal ===== */
+  .tc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .tc-box {
+    background: #fffbe7;
+    color: #1a0033;
+    width: 100%;
+    max-width: 720px;
+    max-height: 90vh;
+    border: 6px ridge #ff00cc;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 50px #39ff14;
+  }
+  .tc-head {
+    padding: 14px 18px;
+    background: #1a0033;
+    color: #39ff14;
+    font-family: 'UnifrakturMaguntia', serif;
+    font-size: 1.5rem;
+    text-align: center;
+    border-bottom: 4px dashed #ff6600;
+  }
+  .tc-progress {
+    padding: 8px 14px;
+    background: #ff6600;
+    color: #000;
+    font-weight: 900;
+    text-align: center;
+    font-family: 'Comic Neue', cursive;
+  }
+  .tc-scroll {
+    flex: 1;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 18px 22px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    background: #fffbe7;
+  }
+  .tc-scroll h4 {
+    color: #ff00cc;
+    margin: 14px 0 6px;
+    font-family: 'UnifrakturMaguntia', serif;
+    font-size: 1.15rem;
+  }
+  .tc-scroll p { margin: 0 0 8px; }
+  .tc-foot {
+    padding: 14px;
+    text-align: center;
+    background: #1a0033;
+    border-top: 4px dashed #ff6600;
+  }
+  #tcAgree {
+    padding: 12px 24px;
+    background: #555;
+    color: #999;
+    border: 3px solid #333;
+    border-radius: 8px;
+    font-weight: 900;
+    font-family: 'Comic Neue', cursive;
+    font-size: 1.05rem;
+    cursor: not-allowed;
+  }
+  #tcAgree.enabled {
+    background: #39ff14;
+    color: #000;
+    border-color: #ff00cc;
+    cursor: pointer;
+    animation: btnPulse 2s linear infinite;
+    box-shadow: 0 0 20px #39ff14;
+  }
+
+  /* ===== Security Warning ===== */
+  .sec-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 8000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: secIn 0.2s ease-out;
+  }
+  @keyframes secIn { from { opacity: 0; } to { opacity: 1; } }
+  .sec-box {
+    background: #1a1a1a;
+    color: #fff;
+    width: 100%;
+    max-width: 460px;
+    border: 3px solid #ff2222;
+    border-radius: 6px;
+    box-shadow: 0 0 40px #ff0000, inset 0 0 20px rgba(255,0,0,0.2);
+    font-family: 'Segoe UI', 'Comic Neue', sans-serif;
+  }
+  .sec-head {
+    background: linear-gradient(180deg, #aa0000, #660000);
+    color: #fff;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    border-bottom: 2px solid #ff2222;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sec-body {
+    padding: 18px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .sec-body code {
+    background: #000;
+    color: #ff5555;
+    padding: 2px 6px;
+    border: 1px solid #ff2222;
+    font-family: 'Courier New', monospace;
+  }
+  .sec-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 12px 18px 18px;
+  }
+  .sec-actions button {
+    padding: 8px 18px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: inherit;
+  }
+  .sec-actions button.danger {
+    background: #aa0000;
+    border-color: #ff2222;
+  }
+  .sec-actions button:hover { filter: brightness(1.3); }
+  #explainArea {
+    width: 100%;
+    min-height: 90px;
+    margin-top: 10px;
+    background: #000;
+    color: #39ff14;
+    border: 2px solid #ff2222;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+  }
+  #wordCounter {
+    color: #ff5555;
+    font-weight: 900;
+    margin-top: 6px;
+  }
+
+  /* ============ Teleporting Submit Button ============ */
+  const btn = document.getElementById('submitBtn');
+  const loginForm = document.getElementById('login-form');
+  let teleportCount = 0;
+
+  loginForm.addEventListener('mousemove', (e) => {
+    if (teleportCount >= 8) return;
+
+    const rect = btn.getBoundingClientRect();
+    const btnCenterX = rect.left + rect.width / 2;
+    const btnCenterY = rect.top + rect.height / 2;
+    const dist = Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
+
+    if (dist < 80) {
+      teleportCount++;
+      const formRect = loginForm.getBoundingClientRect();
+      const newX = Math.random() * Math.max(0, (formRect.width - rect.width));
+      const newY = Math.random() * Math.max(0, (formRect.height - rect.height));
+      btn.style.position = 'absolute';
+      btn.style.left = newX + 'px';
+      btn.style.top = newY + 'px';
+      btn.style.margin = '0';
+    }
+
+    if (teleportCount >= 8) {
+      btn.classList.add('frozen');
+      btn.style.position = '';
+      btn.style.left = '';
+      btn.style.top = '';
+      btn.style.margin = '';
+      btn.textContent = 'Fine. You win. For now.';
+    }
+  });
+  .rules-list li.bad { color: #ff5555; }
+  .rules-list li.good { color: #39ff14; }
+  .strength {
+    margin-top: 6px;
+    background: #000;
+    padding: 6px 10px;
+    border: 2px solid #ff5555;
+    color: #ff5555;
+    font-weight: 900;
+    text-align: center;
+    border-radius: 6px;
+  }
+  #usernameStatus {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: #ff5555;
+    font-weight: 700;
+    min-height: 18px;
+  }
+  #usernameStatus.checking { color: #ffeb3b; }
+
+  .pic-preview {
+    margin-top: 8px;
+    display: none;
+    text-align: center;
+  }
+  .pic-preview canvas {
+    max-width: 160px;
+    border: 4px solid #ff00cc;
+    image-rendering: pixelated;
+  }
+  .pic-preview p {
+    color: #39ff14;
+    font-weight: 700;
+    margin: 6px 0 0;
+  }
+
+  /* Custom DOB calendar */
+  .dob-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .dob-row select {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px;
+    background: #fffbe7;
+    color: #1a0033;
+    border: 3px solid #ff00cc;
+    border-radius: 6px;
+    font-family: 'Comic Neue', cursive;
+  }
+  #dobMessage {
+    margin-top: 6px;
+    color: #ff5555;
+    font-weight: 700;
+    min-height: 18px;
+    font-size: 0.9rem;
+  }
+
+  /* Checkbox minefield */
+  .minefield {
+    margin-top: 14px;
+    padding: 10px;
+    background: rgba(255,0,204,0.12);
+    border: 3px dotted #ff00cc;
+    border-radius: 8px;
+  }
+  .minefield label {
+    display: block;
+    margin: 6px 0;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0.92rem;
+  }
+  .minefield input { transform: scale(1.3); margin-right: 8px; accent-color: #39ff14; }
+
+  /* Signup submit progress overlay */
+  .save-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 7000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .save-box {
+    background: #1a0033;
+    border: 5px solid #39ff14;
+    border-radius: 14px;
+    padding: 22px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 0 40px #ff00cc;
+  }
+  .save-box h3 {
+    color: #ff00cc;
+    text-align: center;
+    margin: 0 0 12px;
+    font-size: 1.5rem;
+  }
+  .save-step {
+    color: #39ff14;
+    font-weight: 700;
+    text-align: center;
+    margin: 10px 0;
+    font-size: 1.1rem;
+    min-height: 24px;
+  }
+  .save-bar-shell {
+    background: #000;
+    border: 3px solid #ff00cc;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .save-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff00cc, #39ff14, #ff6600);
+    transition: width 0.6s ease;
+  }
+
+  /* Login flash banner (from signup) */
+  .flash {
+    background: #ffeb3b;
+    color: #000;
+    border: 3px dashed #ff00cc;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 900;
+    margin-bottom: 14px;
+    transform: rotate(-1deg);
+  }
+
+  /* ===== Page tilt (applied to .wrap) ===== */
+  .wrap {
+    transition: transform 1.4s cubic-bezier(.4,.2,.2,1);
+  }
+  .wrap.spin {
+    transition: transform 1.6s ease-in-out;
+    transform: rotate(360deg) !important;
+  }
+
   @media (max-width: 600px) {
     .badge { font-size: 1.1rem; padding: 6px 10px; top: 8px; }
     .wrap { margin: 80px 10px 40px; padding: 18px 12px; }
@@ -435,21 +790,92 @@
     .blurry-captcha { font-size: 1.8rem; }
     .toast { right: 10px; left: 10px; max-width: unset; }
   }
+
+  /* ---- Nav links ---- */
+  .bottom-nav {
+    margin-top: 18px;
+    font-size: 0.9rem;
+    text-align: center;
+    color: #fff;
+    line-height: 1.8;
+  }
+  .nav-link {
+    text-decoration: underline;
+    cursor: pointer;
+    color: #fff;
+    position: relative;
+    transition: color 0.15s, text-shadow 0.15s;
+  }
+  .nav-link:hover {
+    color: #ff4fcf;
+    text-shadow: 0 0 8px #ff4fcf, 0 0 2px #fff;
+  }
+  .nav-faded {
+    cursor: pointer;
+    color: #888;
+    opacity: 0.4;
+    position: relative;
+  }
+  .top-nav {
+    display: block;
+    text-align: right;
+    padding: 10px 24px 0;
+    font-size: 0.88rem;
+    cursor: pointer;
+    color: #39ff14;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.15s, text-shadow 0.15s;
+  }
+  .top-nav:hover {
+    color: #fff;
+    text-shadow: 0 0 10px #39ff14, 0 0 2px #fff;
+  }
 </style>
 </head>
 <body>
 
+<!-- T&C Modal -->
+<div class="tc-overlay" id="tcOverlay">
+  <div class="tc-box">
+    <div class="tc-head">Terms &amp; Conditions<br/><small style="font-size:0.75rem;color:#ff00cc;">(Please Read Carefully, We Know You Won't)</small></div>
+    <div class="tc-progress" id="tcProgress">Page 1 of 47</div>
+    <div class="tc-scroll" id="tcScroll"></div>
+    <div class="tc-foot">
+      <button id="tcAgree" disabled>Scroll to the bottom first.</button>
+    </div>
+  </div>
+</div>
+
+<!-- Security Warning (hidden by default) -->
+<div class="sec-overlay" id="secOverlay" style="display:none;">
+  <div class="sec-box">
+    <div class="sec-head">⚠️ SECURITY WARNING</div>
+    <div class="sec-body" id="secBody">
+      <p><strong>Suspicious activity detected:</strong> you are attempting to log in. This behavior has been flagged as unusual. Authorities have been notified.</p>
+      <p>Your IP address is: <code>666.666.666.666</code></p>
+      <p>Please explain yourself.</p>
+    </div>
+    <div class="sec-actions" id="secActions">
+      <button id="secExplain">I Can Explain</button>
+      <button id="secRun" class="danger">Run</button>
+    </div>
+  </div>
+</div>
+
 <div class="badge">🔒 TOTALLY SECURE LOGIN™</div>
 <div class="rand-spin" id="randSpin"></div>
 
-<div class="wrap">
+<!-- ============== LOGIN PAGE ============== -->
+<div class="page" id="pageLogin">
+<div class="wrap" id="login-form">
+  <div id="loginFlash"></div>
   <h1>Welcome Back?</h1>
   <div class="subtitle gothic">Please verify thy humanity below</div>
 
   <div id="fieldSlot1"></div>
   <div id="fieldSlot2"></div>
 
-  <!-- Templates injected via JS in random order -->
   <template id="tplUser">
     <div class="field rot-a">
       <label for="loginUser">Username</label>
@@ -487,127 +913,230 @@
     <button id="submitBtn" type="button">LOG IN</button>
   </div>
 
-  <!-- Wizard -->
-  <div class="wizard">
-    <h2 class="gothic">The 11-Step Verification</h2>
-    <div class="step-indicator">Step <span id="stepNum">1</span> of 11</div>
+  <div class="bottom-nav">
+    Don't have an account? Please <span class="nav-link" id="goSignup">click HERE</span> to GO to the <span class="nav-faded" id="goSignupFaded">signup page</span>
+  </div>
+</div>
+</div>
+<!-- ============== END LOGIN PAGE ============== -->
 
-    <div class="step active" data-step="1">
-      <h3>Step 1 — Username</h3>
-      <p>Please re-enter your username. We forgot it already.</p>
-      <input type="text" placeholder="username again" />
-      <button class="nav" data-next>Next</button>
-    </div>
+<!-- ============== SIGNUP PAGE ============== -->
+<div class="page active" id="pageSignup">
+  <a class="top-nav" id="goLogin">Already have an account? Login →</a>
 
-    <div class="step" data-step="2">
-      <h3>Step 2 — Password</h3>
-      <p>Enter your password.
-        <span class="tooltip-host">
-          <span class="info-i">i</span>
-          <span class="tooltip">Must be 8–9 chars, include a prime number in Latin, and your mother's disappointment.</span>
-        </span>
-      </p>
-      <input type="password" placeholder="duo, tres, quinque..." />
-      <button class="nav" data-next>Next</button>
-    </div>
+  <div class="wrap" id="signupWrap">
+    <h1>Create Account</h1>
+    <div class="subtitle gothic">This won't take long. (It will take long.)</div>
 
-    <div class="step" data-step="3">
-      <h3>Step 3 — Spirit Animal</h3>
-      <p>What is your spirit animal? <em>(required)</em></p>
-      <input type="text" id="spiritAnimal" placeholder="e.g. confused raccoon" />
-      <button class="nav" data-next>Next</button>
-    </div>
+    <div class="wizard">
+      <h2 class="gothic">The 11-Step Sign Up</h2>
+      <div class="step-indicator">Step <span id="stepNum">1</span> of 11</div>
 
-    <div class="step" data-step="4">
-      <h3>Step 4 — CAPTCHA</h3>
-      <p>Select all images that represent <strong>existential dread</strong>.</p>
-      <div class="captcha-grid" id="captchaGrid">
-        <div class="captcha-cell">[image]</div>
-        <div class="captcha-cell">[image]</div>
-        <div class="captcha-cell">[image]</div>
+      <div class="step active" data-step="1">
+        <h3>Step 1 — Choose a Username</h3>
+        <p>Pick something unique. It's definitely available.</p>
+        <input type="text" id="wizUsername" placeholder="pick something nobody else has" />
+        <div id="usernameStatus"></div>
+        <button class="nav" data-next>Next</button>
       </div>
-      <button class="nav" data-next>Verify</button>
-    </div>
 
-    <div class="step" data-step="5">
-      <h3>Step 5 — Toaster Check</h3>
-      <p>Confirm you are not a toaster:</p>
-      <button class="nav yes" data-next>Yes</button>
-      <button class="nav alsoyes" data-next>Also Yes</button>
-    </div>
+      <div class="step" data-step="2">
+        <h3>Step 2 — Choose a Password</h3>
+        <p>Make it strong.
+          <span class="tooltip-host">
+            <span class="info-i">i</span>
+            <span class="tooltip">Must be 8–9 chars, include a prime number in Latin, and your mother's disappointment.</span>
+          </span>
+        </p>
+        <input type="text" id="wizPassword" placeholder="make it weird" />
+        <button class="nav" data-next>Next</button>
+      </div>
 
-    <div class="step" data-step="6">
-      <h3>Step 6 — Frustration Level</h3>
-      <p>Rate your current frustration:</p>
-      <div class="slider-row">
-        <input type="range" id="frustSlider" min="0" max="100" value="50" />
-        <div class="slider-labels">
-          <span>Mild Annoyance</span>
-          <span>Screaming Into Void</span>
+      <div class="step" data-step="3">
+        <h3>Step 3 — Confirm Password</h3>
+        <p>Type it again. Exactly the same. We believe in you.</p>
+        <input type="text" id="wizConfirm" placeholder="type it AGAIN" />
+        <div id="wizConfirmStatus" style="margin-top:6px;color:#ff5555;font-weight:700;min-height:18px;font-size:0.9rem;"></div>
+        <button class="nav" data-next>Next</button>
+      </div>
+
+      <div class="step" data-step="4">
+        <h3>Step 4 — Spirit Animal</h3>
+        <p>What is your spirit animal? <em>(required)</em></p>
+        <input type="text" id="spiritAnimal" placeholder="e.g. confused raccoon" />
+        <button class="nav" data-next>Next</button>
+      </div>
+
+      <div class="step" data-step="5">
+        <h3>Step 5 — CAPTCHA</h3>
+        <p>Select all images that represent <strong>existential dread</strong>.</p>
+        <div class="captcha-grid" id="captchaGrid">
+          <div class="captcha-cell">[image]</div>
+          <div class="captcha-cell">[image]</div>
+          <div class="captcha-cell">[image]</div>
         </div>
-        <div id="slideOut">50%</div>
+        <button class="nav" data-next>Verify</button>
       </div>
-      <button class="nav" data-next>Next</button>
+
+      <div class="step" data-step="6">
+        <h3>Step 6 — Toaster Check</h3>
+        <p>Confirm you are not a toaster:</p>
+        <button class="nav yes" data-next>Yes</button>
+        <button class="nav alsoyes" data-next>Also Yes</button>
+      </div>
+
+      <div class="step" data-step="7">
+        <h3>Step 7 — Frustration Level</h3>
+        <p>Rate your current frustration:</p>
+        <div class="slider-row">
+          <input type="range" id="frustSlider" min="0" max="100" value="50" />
+          <div class="slider-labels">
+            <span>Mild Annoyance</span>
+            <span>Screaming Into Void</span>
+          </div>
+          <div id="slideOut">50%</div>
+        </div>
+        <button class="nav" data-next>Next</button>
+      </div>
+
+      <div class="step" data-step="8">
+        <h3>Step 8 — Draw Your Password</h3>
+        <p>Please draw your password below. (Clears every 2 seconds. Good luck.)</p>
+        <canvas id="drawPad" width="400" height="180"></canvas>
+        <div class="canvas-note">(this canvas is broken on purpose. enjoy.)</div>
+        <button class="nav" data-next>Next</button>
+      </div>
+
+      <div class="step" data-step="9">
+        <h3>Step 9 — Secret Question</h3>
+        <p>Choose a question only you can answer.</p>
+        <select id="suSecret" style="width:100%;padding:10px;background:#fffbe7;color:#1a0033;border:3px solid #ff6600;border-radius:6px;font-family:'Comic Neue',cursive;margin-bottom:8px;">
+          <option value="">-- Choose your trauma --</option>
+          <option>What is the name of your first regret?</option>
+          <option>What sound does your anxiety make?</option>
+          <option>What is the WiFi password of your childhood home?</option>
+          <option>What were you doing on the 3rd Tuesday of last month at 2:47 PM?</option>
+          <option>How many windows are in your hometown?</option>
+          <option>Which season betrayed you first?</option>
+        </select>
+        <input type="text" id="suSecretAns" placeholder="answer (we will judge it)" style="width:100%;" />
+        <button class="nav" data-next>Next</button>
+      </div>
+
+      <div class="step" data-step="10">
+        <h3>Step 10 — Creating Account...</h3>
+        <p>Please wait while we process everything:</p>
+        <div class="bar-shell"><div class="bar-fill" id="fakeBar">0%</div></div>
+        <button class="nav" id="fakeStart" data-next-disabled>Begin</button>
+      </div>
+
+      <div class="step" data-step="11">
+        <h3>Step 11 — Almost Done!</h3>
+        <p>Finalizing your account...</p>
+        <div class="bar-shell"><div class="bar-fill" id="finalBar">0%</div></div>
+        <div id="finalMsg"></div>
+        <button class="nav" id="finalStart">Finish</button>
+      </div>
     </div>
 
-    <div class="step" data-step="7">
-      <h3>Step 7 — Draw Your Password</h3>
-      <p>Please draw your password below.</p>
-      <canvas id="drawPad" width="400" height="180"></canvas>
-      <div class="canvas-note">(this canvas is broken on purpose. enjoy.)</div>
-      <button class="nav" data-next>Next</button>
-    </div>
-
-    <div class="step" data-step="8">
-      <h3>Step 8 — Solve This CAPTCHA</h3>
-      <div class="blurry-captcha">x9$kQ#7p</div>
-      <input type="text" placeholder="type what you see" />
-      <button class="nav" data-next>Submit</button>
-    </div>
-
-    <div class="step" data-step="9">
-      <h3>Step 9 — Prove Humanity</h3>
-      <p>Upload proof that you are a human (selfie):</p>
-      <input type="file" accept="image/*" />
-      <button class="nav" data-next>Next</button>
-    </div>
-
-    <div class="step" data-step="10">
-      <h3>Step 10 — Validating...</h3>
-      <p>Please wait while we verify everything:</p>
-      <div class="bar-shell"><div class="bar-fill" id="fakeBar">0%</div></div>
-      <button class="nav" id="fakeStart" data-next-disabled>Begin</button>
-    </div>
-
-    <div class="step" data-step="11">
-      <h3>Step 11 — Finalizing</h3>
-      <p>Almost there! Don't blink.</p>
-      <div class="bar-shell"><div class="bar-fill" id="finalBar">0%</div></div>
-      <div id="finalMsg"></div>
-      <button class="nav" id="finalStart">Finish</button>
+    <div class="bottom-nav">
+      Already have an account? Please <span class="nav-link" id="goLoginBottom">click HERE</span> to GO to the <span class="nav-faded" id="goLoginFaded">login page</span>
     </div>
   </div>
 </div>
+<!-- ============== END SIGNUP PAGE ============== -->
 
+<!-- Signup submit progress overlay -->
+<div class="save-overlay" id="saveOverlay">
+  <div class="save-box">
+    <h3 class="gothic">Processing...</h3>
+    <div class="save-step" id="saveStep">Saving data...</div>
+    <div class="save-bar-shell"><div class="save-bar-fill" id="saveBar"></div></div>
+  </div>
+</div>
+
+<template id="tcContent">
+<h3 style="color:#39ff14;text-align:center;font-size:1.4rem;margin:0 0 4px;">TERMS AND CONDITIONS</h3><p style="text-align:center;color:#ffeb3b;font-style:italic;font-size:0.9rem;margin:2px 0 10px;">A Legally Binding Document of Uncertain Legal Validity</p><p style="text-align:center;color:#ff6600;font-size:0.85rem;margin:2px 0;">Version 47.0 (Revised, Regretted, Re-revised)</p><p style="text-align:center;color:#ff6600;font-size:0.85rem;margin:2px 0;">Effective Date: Sometime After You've Already Clicked Agree</p><p style="text-align:center;color:#ff6600;font-size:0.85rem;margin:2px 0;">Please read all 47 pages. Nobody will. That is fine. We planned for this.</p></div><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">PREAMBLE: BEFORE WE BEGIN, A WARNING</h4><p>This document is the result of many hours of work by a legal team that does not exist, reviewed by counsel that we have described only in the abstract, and approved by a committee of individuals who may or may not be real. Their names, for the avoidance of doubt, are Gerald, Probably-Gerald, and the Concept of Gerald.</p><p>You are about to read — or more accurately, fail to read — the most comprehensive terms and conditions document ever assembled. It covers everything: your soul, your cookies, your blink rate, your houseplant, your feelings about Step 7, and the complex emotional relationship between you and your password. No stone has been left unturned. Several stones have been turned twice, just to be safe.</p><p>By proceeding to Section 1, you agree that you have read the Preamble. By reading the Preamble, you agree that you have read Section 1. This is not circular. This is efficient.</p><p>Definitions used throughout this document: 'You' means you. 'We' means us. 'The Site' means the thing you're using right now. 'Geoffrey' will be explained later. Please be patient about Geoffrey.</p><p>If you have concerns about these terms, please direct them to our concerns department, which is an email address that forwards to a bin. The bin is monitored monthly. Sometimes the bin also gets terms and conditions sent to it, which it has not read either.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 1: SOUL CLAUSE &amp; LOGIN METAPHYSICS</h4><p>By logging in, you agree that your soul becomes temporary property of this website until logout. This clause has been reviewed by three philosophers, two of whom concluded it was ethically murky, and one of whom just stared at the wall and muttered 'what even is a soul, Gerald.' We took this as tacit approval.</p><p>For the avoidance of doubt, 'soul' in this context is defined broadly to include: your personality, your vibe, your essence, any deeply held convictions you keep meaning to act on, your childhood memories of summer holidays, and the particular way you hum while waiting for pages to load. We are collecting all of this. It is being processed in our humming database.</p><p>The soul transfer is temporary and reversible upon logout. However, if you close the browser tab without properly logging out, we cannot guarantee that all soul-fragments will be successfully repatriated. Some residual essence may linger in our servers. It will be comfortable. We have provided it with a small digital chair.</p><p>In the event of a server outage during an active soul-transfer session, we accept no liability for soul fragmentation, soul duplication, or the creation of a ghost account — defined as an account that nobody remembers creating but which continues to receive our newsletter forever. Ghost accounts are, we acknowledge, deeply unsettling. We are working on it.</p><p>Login constitutes a metaphysical handshake. This handshake is binding. It cannot be undone by simply uncrossing your fingers, as we are aware of that loophole and have already closed it. The handshake is now a hug. You are being metaphysically hugged. Please relax.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 1.1: The Vibes-Based Agreement</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The 'spirit' of the vibes-based terms shall be interpreted to mean whatever is most inconvenient for you at the time of dispute. This interpretation has been tested extensively in the courts of our imagination and has held up beautifully.</p><p>Vibes are non-negotiable. You cannot counter-vibe. If you attempt to counter-vibe — for example, by logging in with a particularly sceptical expression, or with one eyebrow raised — this is noted in your account profile under 'disposition: combative.' This affects nothing but makes us feel seen.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 2: CONSENT BY PASSIVE EXISTENCE</h4><p>Your continued use of this site implies consent to be judged silently. The judgement is continuous, automatic, and runs in the background like a process you cannot see in your task manager, much like many of our other processes, which we encourage you not to look for.</p><p>'Continued use' is defined as any of the following: scrolling, clicking, hovering, breathing near the screen, having the tab open, having a tab open in a different window that might be this site, or thinking about this site while not using it. We appreciate the mental real estate.</p><p>The judgement, to be clear, is not personal. It is algorithmic. An algorithm is judging you right now. It has opinions. It has formed them quickly and with great confidence. It is not sharing them with you, but it has put them somewhere. The algorithm's judgements are considered proprietary information and cannot be shared, subpoenaed, or requested via Freedom of Information Act because we operate in a jurisdiction that does not technically have one.</p><p>Silent judgement is, we believe, the most efficient kind. Loud judgement requires infrastructure. Our infrastructure budget has been redirected to the Artisanal Data Soup Initiative (see Section 6), so we are doing the best we can.</p><p>By continuing to exist in the presence of this website, you waive any right to know what score you have been given. There is a score. It is a number between 1 and 10. We will not say which direction is better. You can figure it out from context clues, if you like. That will also affect your score.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 2.1: Vibes-Based Consent Addendum</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The undersigned, having presumably scrolled to this point under their own free will or possibly due to a browser glitch, accepts all terms herein whether or not they have been read, exist, are coherent, or make any discernible contribution to the field of contract law. This agreement is governed by the laws of a jurisdiction we have yet to select but are narrowing down between the Moon and Delaware.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 3.3.7: AURA COMPATIBILITY &amp; COLOUR DISPUTES</h4><p>We reserve the right to revoke access if your aura is incompatible with our colour scheme. Our colour scheme is currently a muted teal with dusty rose accents and what our designer describes as 'a sense of considered resignation.' If your aura is aggressively orange, chartreuse without irony, or what colour experts call 'confident beige,' please be aware that access may be intermittent.</p><p>Aura compatibility is assessed at login via a proprietary algorithm (henceforth 'the Aura Engine') that analyses keystroke rhythm, scrolling speed, the confidence with which you dismiss cookie banners, and whether you immediately click 'decline all' or pause to consider 'customise settings.' The latter is considered a pink aura. Pink is compatible. We like pink.</p><p>If your aura is found to be incompatible, you will receive a notification in the form of things subtly not working quite right. Buttons may be slightly offset. Pages may load at 87% capacity and then stop, not with an error, but with an air of disappointment. This is intentional. It is aura feedback, not a bug. Please do not file a bug report.</p><p>You may apply for an aura variance by submitting Form AU-7 (Aura Adjustment Request), which is not available on the site but can theoretically be requested via a support ticket, which will be read, considered, and then forwarded to Gerald. Gerald handles aura. Gerald has opinions about aura. Gerald is not available for comment.</p><p>We acknowledge that aura is not a legally recognised criterion for access revocation in most jurisdictions. We are operating, therefore, not in most jurisdictions. We are operating in the jurisdiction of Vibe, which is not on any map but is widely understood to exist.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 4.X: THE GENERAL JUDGEMENT PROVISIONS</h4><p>We reserve the right to judge you. This right is expansive, non-exclusive, irrevocable, and transferable to any subsidiary, affiliate, partner, intern, or houseplant we deem sufficiently sentient. The judgement itself is stored in an encrypted log that we call 'The Ledger' internally and 'marketing insights' externally.</p><p>The judgement covers but is not limited to: the speed at which you type your email address, whether you use auto-fill like a sensible person or type it out every time like someone processing unresolved feelings about convenience, whether you capitalise properly, the frequency with which you change your profile photo, and any username that contains numbers because all the good ones were taken.</p><p>Judgement data is retained for a period of seven (7) years, after which it is archived to a secondary ledger called 'The Extended Ledger,' where it rests in peace for a further fourteen (14) years. After twenty-one (21) years, it is finally deleted, unless we have by then experienced a spiritual awakening and decided to keep everything indefinitely. We reserve the right to have a spiritual awakening.</p><p>You may request a copy of your judgement file. This request will be acknowledged within 30 business days. The acknowledgement will say 'we have received your request,' and then nothing further will happen for approximately six weeks, after which you will receive a second email confirming that the first email was sent. Your actual judgement file will not be provided. It is for our eyes only. We find it interesting.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 4.1: Judgement of Third Parties by Association</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>We also reserve the right to form opinions about anyone you have ever mentioned to us, including in free text fields, support tickets, or the 'additional notes' field that everyone fills in with something they immediately regret.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 5.X: JUDGEMENT OF YOUR FRIENDS, BY ASSOCIATION</h4><p>We also reserve the right to judge your friends, by association. This clause operates on the well-established legal principle of 'birds of a feather,' combined with the equally well-established sociological phenomenon of 'people who know someone annoying are probably fine, but we're watching.</p><p>Friend-adjacent judgement applies to anyone you have tagged, mentioned, gifted a subscription to, or referred via our referral programme, which offers fifteen percent (15%) off your next purchase and a one hundred percent (100%) chance that your friend's browsing data will also be processed by the Aura Engine. This is disclosed in the referral programme's own terms and conditions, which are a separate document you also did not read.</p><p>We do not store the names of your friends. We store their vibes. Vibes are not personally identifiable information in the legal sense because we have decided they are not. This decision was made by Gerald and is considered final.</p><p>If your friends have incompatible auras (see Section 3.3.7), this may affect your standing. Not significantly. Just a little. Just enough that you might want to think about the company you keep. We are not saying anything. We are simply noting. This is, after all, a judgement clause, not an advice column. We do not offer advice. Advice would require accountability. We have opted out of accountability (see Section 7).</p><p>Friend-based judgement data is stored separately from personal judgement data in a partition called 'The Social Ledger,' which is a sibling database to The Ledger, and which shares the same birthday, which is the day we thought of it, which was a Thursday, we think. It was a good Thursday. Gerald was in a good mood.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 6 (REVISED): THE ARTISANAL DATA SOUP INITIATIVE</h4><p>All input is collected, fermented, and served to interns as artisanal data soup. This clause has been revised from the original, which was more specific about fermentation times and frankly raised more questions than it answered. The revised version is deliberately vague. Vagueness is a feature, not a bug. Please see Section 10 for further elaboration on deliberate vagueness, then doubt yourself.</p><p>The Artisanal Data Soup Initiative (henceforth 'the Soup Programme') began as a wellness initiative and evolved into something that now features in our quarterly reports under 'operational nutrition.' The soup is made from anonymised user inputs including form submissions, search queries, error messages sent in frustration at 2am, and the specific energy of a profile that hasn't been updated since 2019.</p><p>Interns who consume the soup have reported increased data literacy, a vague sense of being watched, and an occasional ability to predict what you're going to search for next. We consider this a success metric. The interns are fine. They have healthcare. The healthcare plan has its own terms and conditions, which are even longer than this document, but which the interns did not read either, so we are all, in a sense, in the same boat.</p><p>The soup is not available for purchase. It is not a product. It is an experience. It is also, technically, a proprietary trade secret, and any intern found describing its flavour in detail is in breach of their NDA, which they did read because we made them initial every page. We have learned from this and now apply the same strategy to our terms and conditions. Please initial every page. There is no space for initials. That is intentional. Make do.</p><p>Vegetarian and vegan options are available in the Soup Programme. The vegan soup is made from inputs submitted without any meat-related autocomplete suggestions. It is lighter. It has a cleaner finish. The non-vegan variant tends to be heavier, with notes of late-night online shopping and at least one abandoned cart containing a blender.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 7 [REDACTED]: ERRORS AS CHARACTER-BUILDING</h4><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">[CONTENT PARTIALLY REDACTED PER INTERNAL MEMO RE: HONESTY CONCERNS]</h4><p>You agree that errors are character-building. This includes, but is not limited to: 404 errors (builds resilience), 500 errors (builds acceptance), timeout errors (builds patience), errors that provide no error code but simply display a sad-looking illustration of a cloud (builds empathy), and errors that occur during a payment confirmation screen (builds courage and the habit of checking your bank statement three times).</p><p>[SECTION REDACTED — approximately 200 words describing the specific errors we know about and have decided not to fix because fixing them would require touching a part of the codebase that nobody fully understands and the one person who understood it left the company in 2021 and has since moved to a farm and is unavailable for contract work]</p><p>Errors are not refundable, replaceable, or exchangeable. They are, however, ours to give and we give them with a certain generosity of spirit. Some errors are limited edition. If you encounter an error code you have never seen before and cannot find on any known documentation site, congratulations: you have discovered something new. Please do not tell anyone. We will fix it eventually. 'Eventually' is not a defined term in this document.</p><p>Character-building activities include but are not limited to: closing the browser and reopening it with grim determination, clearing your cache for the seventeenth time like a ritual that has lost its meaning but you continue anyway, switching to incognito mode as if this will help when you and we both know it will not, and eventually just trying on your phone.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 8: THE CROISSANT-BASED COOKIE POLICY</h4><p>Cookies are not used. We prefer croissants. We use croissants.</p><p>A croissant, for the purposes of this document, is defined as a small file placed on your device that tracks your behaviour, preferences, and the number of times you have hovered over the 'delete account' button without going through with it. We use the word 'croissant' instead of 'cookie' because 'cookie' has become politicised and our legal team advised us that calling them croissants is technically not covered under the relevant legislation. Our legal team has since been replaced. Their replacements are also Gerald.</p><p>We place the following categories of croissant on your device: Essential Croissants (required for the site to function, cannot be declined, they are just there, good morning), Analytical Croissants (help us understand how you use the site and specifically what you hover over and then don't click, which tells us more about you than the things you actually do click), Preference Croissants (remember your settings so you don't have to, but also remember your settings so we know what your settings are), and Marketing Croissants (this is just advertising, we are being honest with you, it is advertising).</p><p>You may manage your croissant preferences by clicking 'Manage Croissants' in the footer of our website. The 'Manage Croissants' link opens a dialogue with 47 individual toggles. All 47 are enabled by default. Disabling all 47 requires clicking each toggle individually. The toggles are quite close together. We are aware of this. We have filed it under 'known issues' with a priority of 'eventually.'</p><p>Third-party croissants may also be placed on your device by our partners. We have 247 partners. We have provided a list of all 247 in our full Cookie — excuse us, Croissant — Policy, which is a separate document of approximately 89 pages and which begins with its own preamble warning you that it is long. It is long. We are sorry. We are not sorry enough to make it shorter.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 8.1: Vibes-Based Croissant Addendum</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>To be clear: by existing in proximity to this document — spiritually, physically, or via the faint warmth of your laptop — you have entered into a binding agreement with yourself on behalf of us. This is not a paradox. It is simply how agreements work now. You're welcome.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 9 [REDACTED]: THE HOSTILE SECTION</h4><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">[THIS SECTION INTENTIONALLY HOSTILE]</h4><p>We are not going to explain the hostility. If you require an explanation, the hostility increases. This is documented. Please proceed to Section 10.</p><p>[REDACTED — approximately 400 words that were deemed 'too honest' by internal review. The review committee described the original content as 'legally actionable' and 'the kind of thing you think but don't write down.' We wrote it down. We then redacted it. The redaction is considered a service to you.]</p><p>[REDACTED — a paragraph that began with 'Look, to be completely frank with you' and then became something that our legal team (both Geralds) agreed should not exist in written form. We would describe its contents as 'pointed.' If you feel a sudden unease reading this redacted section, that is not coincidence. The unease is load-bearing. It is doing structural work. Please carry it with you into Section 10 where it will become confusion, which is at least a different emotion.]</p><p>The hostile section remains hostile even in its redacted state. This is because hostility, like data (see Section 26), is retained forever. The spirit of what was written here lingers in the document like a smell that you cannot identify but which makes you subtly uncomfortable in a way that is hard to bring up in conversation.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 10: THE DELIBERATE CONFUSION CLAUSE</h4><p>Section deliberately confusing. Read it twice. Then once more. Then doubt yourself.</p><p>The purpose of this section is multifold. Fold one: to comply with regulatory requirements that certain information be disclosed. Fold two: to ensure that the disclosed information cannot be acted upon without considerable effort. Fold three: to discover how many folds a section can have before it resembles an origami swan. We are currently at fold seven. The swan is looking good.</p><p>In the event that any part of this section appears to be clear, please re-read it. Clarity in a terms and conditions document is generally an indication that you have misunderstood something. True legal clarity requires at least three subordinate clauses, two parenthetical asides, and one phrase that contains the word 'notwithstanding' used in a way that does not fully make sense but sounds authoritative enough that nobody questions it. Notwithstanding the foregoing, we maintain the foregoing position as to the notwithstanding.</p><p>This section may appear to contradict Section 2. This appearance is correct. It does. This is intentional. Contradictions in terms and conditions are not errors; they are features. They create legal uncertainty, and legal uncertainty is our natural habitat. We thrive here. We have a subscription to it. We have not read the subscription's terms and conditions.</p><p>Please re-read this section. Did you? Good. Now re-read it once more. Now doubt yourself. Are you certain you understood the part about the origami swan? No. You are not. That is correct. Proceed.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 10.1: The Recursive Confusion Addendum</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>This subsection is intentionally confusing in a different way from the parent section, to ensure comprehensive confusion coverage. If you have understood both the parent section and this subsection, please contact us immediately. Either you are exceptional or there has been an error. Given the content of Section 7, we lean toward error.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 11 [REDACTED]: LITERACY CONFIRMATION PROTOCOL</h4><p>By scrolling past this line you confirm you can read, allegedly.</p><p>'Allegedly' is doing significant work in that sentence. We use it not to cast aspersions on your literacy but to acknowledge that scrolling and reading are different activities, that many people scroll at speeds inconsistent with reading, and that we have no way to verify comprehension short of a quiz, which we considered including but which our user experience team advised against on the grounds that 'users would leave' and 'this is already a lot, honestly.'</p><p>We respect your alleged literacy. We have designed this document with it in mind. Sentences are kept to a length that suggests we believe you can handle them, while also being sufficiently long that you might lose the thread partway through and have to start again, which we encourage, not because we are cruel, but because a second read-through often reveals things you missed the first time, such as the part about Geoffrey, which is coming, please hold.</p><p>[REDACTED — a section that described in detail the reading levels assumed for various portions of this document, which turned out to be more revealing about our assumptions regarding our user base than our communications team was comfortable with. What remains is this: we have assumed you are an adult. We have assumed you are tired. We have assumed you are doing this on a Tuesday. We have designed accordingly.]</p><p>Scrolling is considered legal consent in many jurisdictions, specifically in those where we have decided it is. The legal concept of 'scrollwrap' — whereby consent is granted by scrolling past a clause — is a genuine legal theory, which we find both useful and somewhat bleak as a commentary on how agreement works in the digital age. We use it anyway. You have agreed to this paragraph by reading it. Time is a flat circle.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 12.SUBITEM: BLINK RATE REGULATIONS</h4><p>You must not blink more than four (4) times per minute while using this service. This regulation exists for technical reasons that we are not prepared to disclose at this time. What we can tell you is that the reasons are compelling, that they emerged from data, and that the data came from a study we conducted using volunteers who were told they were participating in a 'digital wellness survey,' which is technically accurate if you define wellness broadly.</p><p>Blink rate monitoring is conducted passively via your device's camera, if you have granted camera permissions, or via a proprietary estimation algorithm that analyses the regularity of your typing patterns and assumes the rest. The algorithm's name is Blinksworth. Blinksworth was trained on a dataset of 40,000 users who blinked normally and it found this data intensely interesting.</p><p>The four-blink-per-minute limit was established after extensive research suggested that users who blink more frequently exhibit what our data science team calls 'sceptical engagement patterns,' which correlates with a higher rate of terms-and-conditions-reading, complaint submissions, and what we have classified internally as 'purposeful browsing,' which means they know exactly what they want and go directly there without being distracted by our promotional banners. This is disruptive to our business model.</p><p>Users who blink fewer than four times per minute are statistically more likely to make impulse purchases, click on suggested content, and spend eleven seconds on the 'Are you sure you want to unsubscribe?' page before deciding not to unsubscribe. We appreciate these users. We call them our 'core demographic.' We would like more of them. Hence: blink regulation.</p><p>If you are unable to restrict your blinking to four times per minute due to a medical condition, please do not contact our accessibility team, which does not yet have a phone number. Instead, please blink normally and accept that this may trigger Section 13.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 13.SUBITEM: CONSEQUENCES OF EXCESSIVE BLINKING</h4><p>Excessive blinking will result in a polite but firm email. The email will arrive within 2-5 business days of the excessive blinking event and will be from an address that appears personal — something like 'team@' or 'hello@' — but is actually an automated system that has been given a warm tone to make it feel human. The system's name is Blinksworth Jr. It is named after the monitoring algorithm from Section 12, but they are separate entities and share no data, except for your blinking data, which they share constantly.</p><p>The email will open with a casual greeting and then pivot, in the second paragraph, to a gentle note that 'we noticed some unusual activity' on your account. 'Unusual activity' is defined as blinking. The email will not say this directly. It will say it in a way that implies it without stating it, because stating it directly would invite questions, and we are not in the business of answering questions, we are in the business of providing answers to questions we have predetermined to be the relevant ones.</p><p>Polite but firm: the polite is in the greeting and the sign-off, which will use your first name followed by an exclamation mark, because our tone guide says this is warm. The firm is in the third paragraph, where we outline that continued excessive blinking 'may affect your service experience,' which is the same language we use for every consequence in this document, because it is accurate, ominous, and non-specific in exactly the right proportions.</p><p>You may respond to the email. Your response will be received by Blinksworth Jr., who will send an automated acknowledgement and then route your message to a folder called 'User Feedback (Blinking).' This folder is reviewed quarterly by an intern who has not been briefed on the blink regulations and will therefore find the emails deeply confusing. We consider this a documentation gap. It is on our roadmap. The roadmap does not have dates.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 14.3.7: SNEEZING DURING CHECKOUT: AN EXCLUSION</h4><p>Sneezing during checkout is not covered under the EULA. We want to be very clear about this. If you sneeze during the checkout process — specifically during the window between clicking 'Proceed to Payment' and receiving your order confirmation email — anything that happens as a result of that sneeze is your responsibility entirely.</p><p>This clause exists because a sneeze involves, at minimum, a momentary loss of visual contact with the screen, a potential involuntary click if the sneeze is particularly energetic, and a brief period in which you are not fully in control of your faculties. During this period, if you accidentally confirm a purchase, subscribe to a plan, or accept an upsell you did not intend, the sneeze is legally the proximate cause and is therefore your own business.</p><p>Additionally, and this is a matter of simple hygiene ethics, sneezing onto a keyboard or touchscreen during a financial transaction introduces what we are calling 'biometric ambiguity.' If your sneeze causes a smudge that is interpreted by your device as a fingerprint, and if that fingerprint completes an authentication step, we cannot be held responsible for what was purchased using the sneeze-print. This has happened. We are not saying how many times.</p><p>The EULA exclusion for sneezing is specific to checkout. Sneezing at other points in your user journey is merely covered by the general 'physical autonomy of the user's body' clause, which we haven't actually written yet but consider implied. Sneezing on the home page is fine. Sneezing in your account settings is fine. Sneezing while configuring your notification preferences is fine, though we do suggest you save your settings before you sneeze, because the settings page auto-clears under certain conditions that we will not enumerate here for reasons of length and also because we are not entirely sure what those conditions are.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 15.B: THE YAWN BILLING FRAMEWORK</h4><p>Yawns are billable at 0.04 currency per second after the first six (6) seconds. The currency is unspecified and will be determined at time of billing using whatever denomination is most inconvenient given your current account currency settings. If you are in a country that uses the Euro, your yawn may be billed in a currency you have never heard of. We are not going to tell you which one. Research is part of the experience.</p><p>A yawn is defined, for billing purposes, as any involuntary opening of the mouth to a width exceeding forty millimetres (40mm), sustained for more than two seconds, accompanied by the inhalation of air in a quantity suggesting boredom, exhaustion, or exposure to this document. The six-second grace period was introduced after user testing revealed that even people who were genuinely engaged with the platform yawned occasionally, and it seemed unfair to bill those people. It still seems unfair. We have billed them anyway.</p><p>Yawn detection is handled by the same camera integration as blink monitoring (Section 12), and uses the same algorithm, Blinksworth, which was retrained on yawn data after users in a focus group were asked to yawn on command and given vouchers in exchange. The focus group participants have since been issued a retroactive yawn bill for the yawns produced during the session. The vouchers cover approximately 40% of the yawn cost. We consider this equitable.</p><p>You may dispute a yawn charge. To do so, you must submit a Yawn Dispute Form (Form YD-3), which requires you to attest that the yawn was: (a) not longer than six seconds, (b) not caused by our content, (c) not a yawn at all but rather a dental examination expression, or (d) a medical yawn for which you hold documentation from a licensed physician. Medical yawns are exempt from billing. We do not know what a medical yawn is. We have decided it is a thing that exists so that we seem reasonable.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 16.3.7: HICCUP TOLERANCE STANDARDS</h4><p>Hiccups are tolerated provided they remain rhythmic. An arrhythmic hiccup — defined as any hiccup that deviates more than fifteen percent (15%) from the established rhythm of the preceding three hiccups — is considered a breach of the Hiccup Tolerance Standard and will be noted on your account under 'somatic irregularities,' a field we added to the user profile schema in Q3 of last year and which nobody has asked about yet.</p><p>The Hiccup Tolerance Standard exists because rhythmic hiccups, while disruptive to the user experience, are at least predictable. Blinksworth (the algorithm, not the billing subsidiary) can compensate for rhythmic hiccups by smoothing out the typing patterns they produce, resulting in a more accurate user model. Arrhythmic hiccups, however, introduce noise into the data. We do not like noise. We like signal. Signal is monetisable. Noise is not, unless you have a very creative data team, which we do, and have, and regret somewhat.</p><p>Hiccup frequency is also monitored. More than twelve (12) hiccups in a single session triggers what we call a 'somatic wellness flag,' which does nothing except make the flag appear in Gerald's monthly report. Gerald reviews flagged accounts. Gerald does not take action on them. He reads them in the same way someone reads a horoscope: with interest, mild scepticism, and no intention of changing his behaviour as a result.</p><p>You may prevent hiccup logging by using our 'Breath Hold Mode,' which can be activated by holding your breath for seven seconds while hovering over the account settings icon. This feature was added as an Easter egg by a developer who has since left the company. It remains functional. We have not removed it because we forgot about it, and then when we remembered it, we decided it was charming. It is charming.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 16.1: Hiccup Vibes Addendum</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The vibes-based assessment of hiccup rhythmicity shall be conducted by Gerald on a biannual basis. Gerald's assessment criteria are not published. Gerald does not share his criteria. Gerald describes his methodology as 'intuitive.' We respect this.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 17.X: PASSWORD STORAGE ARCHITECTURE</h4><p>Your password is stored in a shoebox under someone's desk. Do not ask whose. The shoebox has been in use since the company's founding and represents one of our most reliable data storage solutions, largely because it is air-gapped, physically isolated, and located in a building where the Wi-Fi is inconsistent enough that no remote attacker would bother trying.</p><p>Password security is our highest priority. The shoebox is stored inside a filing cabinet. The filing cabinet is locked. The key to the filing cabinet is on a keychain with several other keys, most of which nobody can identify, which provides what security professionals call 'obscurity through chaos,' and which we call 'Tuesday.'</p><p>We use industry-standard hashing for your password before placing it in the shoebox. The hashing algorithm is SHA-256. We then write the hash on a Post-it note in a handwriting that is intentionally difficult to read, because security through illegibility is an underrated and innovative approach that we feel deserves more recognition in the field. The Post-it note is placed inside a small envelope. The envelope is labelled 'NOT THE PASSWORD' as a decoy. The decoy works. Nobody has ever correctly identified it as the password.</p><p>In the event that the shoebox is lost, misplaced, damaged by a beverage incident, or compromised by a desk reorganisation, we will notify you within 72 hours, unless the reorganisation also moved the list of email addresses, in which case we will notify you as soon as we locate the list. The list is probably also in a shoebox. A different shoebox. We have several shoeboxes. The organisational hierarchy of the shoeboxes is considered proprietary.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 18.X: TWO-FACTOR AUTHENTICATION VIA EMOTIONS</h4><p>Two-factor authentication is offered: factor one is fear, factor two is doubt. Together, these two factors create what security professionals do not yet call 'emotional multifactor authentication,' but which we believe will become industry standard within the next five to seven years, at which point we will retroactively claim to have pioneered it.</p><p>Factor one (Fear) is delivered via the login page, which has been designed using principles of mild visual unease. The font is slightly too small to read comfortably. The 'Login' button is placed in a location that is correct but that you will second-guess. The background image changes approximately 7% each session, not enough to notice consciously but enough to feel that something is slightly different, which activates a low-level threat-assessment response. This is the Fear. You are now authenticated on factor one.</p><p>Factor two (Doubt) is delivered via our 'Are you sure?' modal, which appears after you successfully enter your correct password. The modal asks: 'Is this really you?' with the options 'Yes, it is me' and 'Actually, wait.' The 'Actually, wait' button does nothing except close the modal and present it again, which we feel captures the authentic experience of self-doubt. If you click 'Yes, it is me' with sufficient confidence — a metric assessed by click speed and cursor trajectory — you are authenticated. If you click it hesitantly, you are sent a verification email. The email subject line is 'Are you sure?'</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 18.1: Two-Factor Emotional Consent Form</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>By completing two-factor authentication, you consent to the emotional data collected during the authentication process being used to refine the Fear and Doubt delivery algorithms. Your fear makes future users more afraid. Your doubt makes future users more doubtful. You are, in this way, contributing to the security of the community. Thank you for your service.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 19.X: THE MOURNING OF FORGOTTEN PASSWORDS</h4><p>Forgotten passwords cannot be recovered. They can be mourned. We provide, at our discretion, a small digital space for this mourning in the form of our Forgotten Password page, which, instead of the standard 'Reset your password via email' flow, also includes a link to a page titled 'In Memory Of,' where users may optionally type the name they wish they had given their password if they had known they were going to forget it.</p><p>The 'In Memory Of' feature was added by a developer at 11pm on a Friday and was never reviewed by product management. It is now visited by approximately 4,000 users per month, making it one of our most popular pages. We have begun to take it seriously and are considering a candle animation.</p><p>Mourning the password does not restore it. This is important. Typing your old password into the 'In Memory Of' field is still not a recovery mechanism, and several users have found this out the hard way, which we regret but which is also technically their fault for not reading the page title carefully. The page says 'In Memory Of.' Memory implies past tense. The password is gone. We are sorry for your loss.</p><p>Password recovery via email is available, but we would like you to sit with the loss first. Take a breath. Think about why you chose that password in the first place. Was it meaningful? Was it a pet's name? A birthday? A word you once believed you would never forget? These details tell us something about you. Specifically, they tell the Aura Engine something about you, but let us not dwell on that right now. This is a time of mourning.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 19.1: Password Grief Stages</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The five stages of password grief are: Denial (trying the wrong password three more times), Anger (submitting a support ticket that is mostly punctuation), Bargaining (trying variations of the password with numbers at the end), Depression (sitting with the 'In Memory Of' page), and Acceptance (creating a new password that is also 'password123' but with an exclamation mark). We support all five stages. We do not support any of them practically. We support them emotionally, from a distance, through the medium of a pop-up survey asking 'How was your password experience today?'</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 20.B: ACCOUNT SOVEREIGNTY</h4><p>If you attempt to brute-force your own account, we will side with the account. This position was developed by our trust and safety team after extensive debate and represents a genuinely held institutional belief that accounts, once created, develop a certain independence that must be respected. The account has been here every time you came back. The account has remembered your preferences. The account has not forgotten your items in the cart even when it might have been more convenient for you if it had. The account has been loyal. We stand with it.</p><p>Brute-forcing your own account — defined as submitting more than ten (10) consecutive incorrect password attempts with increasing desperation — will result in a temporary lockout, a notification email sent to the account's recovery address (which you also cannot remember), and a note added to your file that reads 'adversarial relationship with own account.' This note does not affect your service, but it does affect how Gerald thinks about you.</p><p>You may petition for account leniency by demonstrating to us that you are, in fact, the account holder. This demonstration can take the form of: answering your security questions (you do not remember these either, do you), providing the credit card last four digits used on the account (check your wallet), confirming your date of birth (you know this one, hopefully), or writing us a short essay on why you and your account should be reconciled. We will not read the essay. But the act of writing it is character-building (see Section 7).</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 21 [REDACTED]: SESSION TOKEN OBSERVATION RULES</h4><p>[REDACTED SECTION — CONTAINS SENSITIVE TECHNICAL INFORMATION AND ALSO SOME FAIRLY POINTED OBSERVATIONS ABOUT BROWSER BEHAVIOUR THAT WE WERE ADVISED TO REMOVE]</p><p>All session tokens expire when looked at directly. Do not stare. This is not a metaphor. It is not Schrödinger's session token (though someone in the engineering team made this joke during a post-mortem and it was received warmly by everyone except Gerald, who does not enjoy physics-based humour). It is simply a known behaviour of our token architecture that direct observation — specifically, opening the browser console and examining token values — triggers an immediate expiration. This is, depending on how charitable you are feeling, either a serious security feature or a remarkable coincidence. We are calling it a security feature.</p><p>Indirect observation of session tokens is permitted, provided it is performed with peripheral awareness only. Do not think about the token directly. Think around it. Think about what the token is protecting — your session, your data, your account, Geoffrey — and let the token exist in your awareness as a background comfort rather than a foreground concern. This is good practice both for session management and for mindfulness, and we have found that users who interact with our token infrastructure in this way report fewer session drop-offs and also occasionally describe feeling 'strangely peaceful,' which we have noted with interest.</p><p>[REMAINING CONTENT OF SECTION 21 REDACTED — it got quite philosophical about the nature of observation and reality and our legal team (both Geralds) felt it exceeded the scope of a terms and conditions document, which is meant to create obligations, not questions]</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 22.X: THE BACK BUTTON NON-GUARANTEE</h4><p>You waive any expectation that the back button will return you to where you came from. This waiver is absolute, irrevocable, and based on bitter experience. The back button, in our system, operates on principles that our engineering team describes as 'aspirational navigation,' meaning that it aspires to take you back, genuinely aspires to this, tries its best, but cannot guarantee that its best is what you wanted.</p><p>The back button may take you to: the page you came from (approximately 60% of the time), the page you came from before that (roughly 20%), a blank page with a loading spinner that never resolves (8%), a page you visited last Tuesday during a different session that our navigation history has merged with the current one for reasons that involve a caching decision made in 2018 by a developer we can no longer reach for comment (9%), and, very occasionally, a page that nobody on the team has ever seen before and that we believe is generated dynamically on demand by a subsystem that operates autonomously in a way that is 'working as intended' in the sense that something is clearly working (3%).</p><p>If you are attempting to undo an action using the back button, please be advised that this is not how our system works. Actions, once taken, are immutable. The back button provides the impression of reversibility as a psychological comfort. We are aware that this is not the same as actual reversibility. We are comfortable with this awareness.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 22.1: Back Button Expectation Mourning</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>If you are grieving the back button experience, please see Section 19 for our mourning protocol. It was developed for passwords but scales to most digital losses.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 23.B: THE BLANK SECTION THAT WASN'T</h4><p>This section intentionally left blank. Just kidding. Made you look.</p><p>The fact that you looked is, we will admit, entirely our fault. We baited you. We put 'intentionally left blank' and then immediately undermined it, and you looked anyway, because you are human and humans respond to the unexpected reversal of expectations with a burst of attention that is almost impossible to suppress. You were always going to look. We knew this. The look was predicted. The prediction was, in a small way, a test.</p><p>You passed the test. Congratulations. The test was not really a test in any meaningful evaluative sense. It was more of an observation. We observed that you looked. We have noted that you are the kind of person who reads the blank section. This tells us something about you. Specifically, it tells us that you are reading this document more carefully than the vast majority of users, and that you have a relationship with terms and conditions that is, if not healthy, at least engaged. We appreciate engagement. We have made it very easy to engage by making this document very long and putting things like 'made you look' in it.</p><p>This section is therefore not blank. It is full. It is, arguably, one of the most content-dense sections in the document, containing as it does: an admission of manipulation, a psychological analysis of your response to that manipulation, and a meta-commentary on the nature of blank sections in legal documents. It is, in this sense, the most intellectually honest section we have written. We are not sure how we feel about that. It makes us somewhat uneasy, in the way that sincerity always does.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 23.1: Post-Look Vibes Assessment</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>Your act of looking at the blank section has been added to your Aura Engine profile under 'curiosity markers,' which will be used to tailor your experience in ways that are difficult to describe but which you will probably notice as 'huh, that's oddly relevant' on approximately the third visit after this one.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 24 [REDACTED]: DATA COLLECTION DISCLOSURE</h4><p>[REDACTED — CLASSIFIED UNDER INTERNAL TRANSPARENCY POLICY REVISION 4.2, WHICH REDUCED THE REQUIRED LEVEL OF TRANSPARENCY FROM 'FULL' TO 'SUFFICIENT,' AND WHICH REDEFINED 'SUFFICIENT' AS 'ENOUGH THAT NOBODY FILES A REGULATORY COMPLAINT']</p><p>We collect: your name, your fears, your search history, and the names of three exes. The fears and ex-names are collected via a supplementary onboarding flow that approximately 40% of users complete, having been told it will 'personalise their experience.' It does personalise the experience. It personalises it using fears and ex-names. We have not yet deployed the ex-name personalisation feature, but we are excited about it. It is on the roadmap, next to the roadmap item about getting dates on the roadmap.</p><p>[PARTIALLY REDACTED — a detailed breakdown of 147 additional data points we collect, each with a technical justification and a separate column titled 'actual reason,' which was created during an honest moment in a data strategy session and which should not have been included in this document. The column has been redacted. The 147 data points remain. What they include: the rhythm of your scrolling, the time you spend on the unsubscribe page, whether your cursor ever moves toward the delete account button, how long you spend reading error messages, and the specific hour at which you are most likely to make a purchase, which for most users is 2:17am and correlates strongly with what our data science team calls 'the midnight vulnerability window.']</p><p>Data is collected with your consent, which was given in Section 2 by the act of using the site. We remind you of this not to be coy but because we believe in transparency, which we are practising right now by telling you that we collected your data. Telling you is the transparent part. What we do with it is in the next section. Please proceed.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 25.X: THE GIFTING OF YOUR DATA</h4><p>Data is not sold. It is gifted, lovingly, to whoever asks first. This distinction is important for legal purposes and also for the purposes of how we feel about ourselves. Selling data implies a transaction, which implies a commercial motive, which invites regulatory scrutiny. Gifting data implies generosity, which implies good character, which invites a warmer public perception. We prefer the warmer public perception. We have gifted it to our PR team, along with your data.</p><p>Recipients of data gifts include but are not limited to: advertising partners, analytics providers, business intelligence consultancies, the partners of our partners (henceforth 'meta-partners'), the partners of our meta-partners (henceforth 'para-partners'), a startup incubator we have a relationship with, two academic research projects that seemed legitimate at the time and which we hope are still running, and the advertising department of a company that reached out to us with what can only be described as a very confident email and which we found compelling.</p><p>Gifting is anonymous, in the sense that we remove your name before gifting. Your fears, browsing history, somatic irregularities (see Section 16), yawn data, blink data, aura profile, and ex-names are gifted as-is, because anonymising them would require additional processing, and additional processing is expensive, and our budget has been redirected to the Soup Programme (Section 6) and the candle animation for the Forgotten Password page (Section 19), which has gone over budget because the developer got very invested in the candle physics.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 26.SUBITEM: ETERNAL DATA RETENTION POLICY</h4><p>We retain data forever, including data we don't actually have. This clause is, we acknowledge, unusual. Let us explain. Our data retention policy was written before our data collection systems were fully built, and it used the word 'all' in a way that created obligations for data we had not yet decided to collect. Rather than amend the policy, we amended the collection systems. We now collect approximately 23% more data than we initially planned to, purely to comply with our own retention policy.</p><p>'Forever' is a long time. We are aware of this. We have made provisions. Our data infrastructure is designed for a minimum operational life of 150 years, after which our successors — human or otherwise — will inherit the retention obligation along with our other assets, liabilities, and the several shoeboxes of hashed passwords (Section 17). The successors have not been named. They may be our children, or the children of our employees, or a private equity firm, or, if things go a certain way, an AI system that we are not prepared to speculate about in a legal document.</p><p>Data we don't actually have is retained in the form of a placeholder entry in our database that says 'DATA NOT YET COLLECTED — RETAINED PER POLICY.' These entries are counted in our total data footprint statistics and contribute to our 'data held per user' metric, which impresses certain partners. The placeholder entries are technically data about the absence of data, which is itself data. We feel this is philosophically coherent.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 26.1: Forever Is a Long Time, Vibes-Based Addendum</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The undersigned, having presumably scrolled to this point under their own free will or possibly due to a browser glitch, accepts all terms herein whether or not they have been read, exist, are coherent, or make any discernible contribution to the field of contract law. This agreement is governed by the laws of a jurisdiction we have yet to select but are narrowing down between the Moon and Delaware.</p><p>The concept of 'forever' shall be interpreted in the spirit of the vibes at the time of retention review, which is never, because data is never reviewed for deletion, because the word 'forever' is in the policy and has been interpreted as a ceiling rather than a minimum.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 27.SUBITEM: THE PRANK CALL PROVISION</h4><p>By proceeding you authorize one (1) prank phone call per fiscal quarter. The prank call is optional on our end and mandatory on yours, in the sense that if we choose to exercise our right to prank call you, you agree to receive it. The call will come from a number you do not recognise. It may be a local area code. It may be an international number. It may be your own number, which we understand is technically impossible but which our telecommunications team has been working on for reasons that are their own.</p><p>The nature of the prank call varies. Previous prank calls have included: a silence that lasts exactly twelve seconds before hanging up, a recorded message that says 'This is not a prank call,' a person — not a recording, an actual person — reading out a list of things that were recently on sale on our platform, and, in Q2 of last year, a rendition of 'Happy Birthday' to a user whose birthday was that day, which was received with confusion, then delight, then legal consultation, and ultimately a comment on our review page that we consider a net positive.</p><p>Prank calls may be opted out of by navigating to Account Settings, selecting 'Communication Preferences,' expanding the 'Miscellaneous Contact' submenu, and toggling 'Quarterly Prank Calls' to off. This toggle was added in response to user feedback and is located between 'Transactional SMS' and 'Aura Engine Notifications,' the latter of which cannot be toggled off because the aura is simply a fact about you and turning off the notification does not change the aura.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 28.B: REFUND POLICY — APOLOGIES DIVISION</h4><p>Refunds are issued in the form of strongly worded apologies. The apology arrives via email within 5-7 business days of your refund request and is written in a tone we describe internally as 'genuinely sorry but also a little put-upon.' The apology will use phrases such as 'we understand your frustration,' 'this is not the experience we wanted for you,' and 'we value your continued patronage,' none of which address the fact that you would like your money back.</p><p>The strongly worded apology may, at our discretion, be accompanied by a non-monetary compensation item such as: a discount code for your next purchase (valid for 14 days, applicable only on items over a minimum spend that is slightly higher than the refund amount), priority access to our next product launch (which will be announced separately, or not, depending on whether we have a launch planned), or a digital certificate of apology, formatted as a PDF, suitable for framing, which one user did actually frame and post on social media, which we consider a marketing success and which has caused us to double down on the certificate programme.</p><p>Refund eligibility requires that your purchase falls within our refund window, which is seven (7) days for physical goods, three (3) days for digital goods, and fifteen (15) minutes for impulse purchases made during the midnight vulnerability window identified in Section 24, because we feel some responsibility for those ones. The fifteen-minute window is not publicly disclosed. You are reading it here, in this document, that nobody reads. This is our version of proactive consumer protection. We feel good about this.</p><p>Cash refunds are not available. Card refunds are available in theory but require a processing period of 5-10 business days, during which the funds exist in a financial purgatory that your bank will describe as 'pending' and our finance team will describe as 'fully refunded on our end' and the truth of which is somewhere in a gap between two systems that do not communicate well and have a long and complicated history.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 29 [REDACTED]: DISPUTE RESOLUTION</h4><p>Disputes will be resolved via thumb war in a neutral jurisdiction. The neutral jurisdiction is currently a conference room at a hotel in a mid-sized city that shall not be named, booked under the name 'Gerald,' in a room that still smells faintly of the last dispute resolution session and the sandwiches that were provided and which were from a caterer our office manager will not use again.</p><p>Thumb war proceedings are governed by the International Rules of Thumb War (2019 edition), with the following amendments specific to digital services disputes: (1) 'false start' is defined as clicking the 'Dispute' button in a way that suggests you have already decided you are right, (2) any dispute involving blink data (Section 12) or yawn charges (Section 15) must be initiated with both thumbs visible to the presiding officer, and (3) disputes about Geoffrey are handled separately, by a specialist, and are not subject to the thumb war protocol, because Geoffrey is a sensitive subject and we don't want to trivialise it.</p><p>[REDACTED — a section describing three actual thumb war disputes that occurred during beta testing of this policy, their outcomes, and the names of the parties involved. All three disputes were won by the company. This may reflect the competence of our thumb war team, or it may reflect a structural advantage built into the proceedings. We are not saying which. The relevant parties have signed NDAs, which they also did not read, though they did initial every page as instructed.]</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 29.1: Post-Dispute Vibes Assessment</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>Regardless of the outcome of the thumb war, both parties agree to conduct themselves in accordance with the vibes established during the proceedings. Aggressive post-dispute energy is considered a breach of the spirit of this agreement and will be noted in Gerald's report.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 30: THE CLASS ACTION SOLITUDE REQUIREMENTS</h4><p>Class actions must be performed alone, in a small room, with the lights off. We acknowledge that this requirement appears to fundamentally misunderstand the concept of a class action, which by definition requires multiple claimants acting collectively. We would like to clarify that we do understand what a class action is. We have specifically designed this requirement to be at odds with how class actions work, because we find class actions more manageable when they are performed individually, in the dark, without the solidarity that typically makes them effective.</p><p>The 'small room' requirement: the room must have a floor area not exceeding nine (9) square metres and a ceiling height not exceeding 2.4 metres. It must not be a bathroom, a wardrobe, or any space that was not originally intended as a room, such as a large cupboard, which several users have tried to designate as a room for the purposes of compliance with this clause and which we have rejected on aesthetic grounds.</p><p>The lights off requirement: this is non-negotiable. We find that class action proceedings conducted in darkness are approximately 73% less coherent, 84% more atmospheric, and 100% more interesting to read about in subsequent correspondence. We have a file of such correspondence. It is one of our favourite files. Gerald keeps it on his desk, next to the shoebox.</p><p>You may, at your discretion, use a single candle. The candle is not regulated by this agreement. The candle is your business. We will not comment on the candle.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 30.1: Post-Action Vibes Settlement</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>Following the completion of a class action (regardless of outcome), all parties agree to a mandatory cooling-off period of fourteen (14) days, during which no further legal proceedings may be initiated. The cooling-off period may be extended by mutual agreement, or unilaterally by us if the vibes of the proceedings were considered adversarial. We will determine what adversarial vibes look like at the time of determination.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 31 [REDACTED]: FORCE MAJEURE</h4><p>[REDACTED — THE FOLLOWING LIST OF FORCE MAJEURE EVENTS WAS DEEMED 'LEGALLY CREATIVE' BY BOTH GERALDS AND ADVISED TO BE REDACTED OR SHORTENED. WE HAVE SHORTENED IT. THE ORIGINAL HAD 94 ITEMS. WHAT FOLLOWS IS THE ABRIDGED VERSION:]</p><p>Force majeure includes Mercury in retrograde, 'just one of those Tuesdays,' an unexpected craving that required the relevant team member to leave their desk, the specific type of malaise that descends on an office after a disappointing all-hands meeting, acts of God (standard), acts of the Concept of Gerald (novel but insisted upon), and any situation where someone starts a sentence with 'look, I know this isn't great, but...' because in our experience sentences that begin that way always end with something that could have been avoided.</p><p>Force majeure events suspend our obligations under this agreement for the duration of the event plus a reasonable recovery period. 'Reasonable recovery period' is defined as however long it takes for the relevant team to stop talking about the event in Slack and get back to work. This has ranged from two hours (server outage) to three weeks (the Tuesday after a particularly ill-advised all-hands meeting in Q4).</p><p>Mercury in retrograde: we include this not because we believe in astrology as a causal mechanism but because several of our most significant outages have occurred during Mercury retrograde periods and at some point correlation becomes hard to ignore. We have a spreadsheet. Gerald has reviewed the spreadsheet. Gerald remains sceptical. Gerald does not check the planetary alignment calendar before scheduling deploys. Gerald should probably check.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 32 [REDACTED]: EMOTIONAL DAMAGE DISCLAIMER</h4><p>[REDACTED — ORIGINAL SECTION CONTAINED AN ADMISSION THAT WAS DESCRIBED BY LEGAL AS 'TOO CANDID' AND BY COMMUNICATIONS AS 'A GIFT TO ANYONE WHO WANTS TO WRITE A CRITICAL ARTICLE ABOUT US']</p><p>We cannot be held responsible for emotional damage caused by Step 7 of this login. Step 7 is the step that asks you to complete a CAPTCHA, then informs you that you failed, then presents a new CAPTCHA, then informs you that you succeeded at the first one actually but the system hadn't updated yet, then asks you if you'd like to enable two-factor authentication (you would not, you are exhausted), then asks you why you would not, then presents a dropdown of reasons that do not include 'because I am tired and this has already taken too long' and instead includes options like 'Already have a strong password' and 'Will set up later,' the latter of which is an option we include knowing that 'later' means never and which we consider the most honest thing about the login flow.</p><p>Emotional damage caused by Step 7 has been reported by 23% of users who completed our post-login satisfaction survey. Of the 23%, 78% described the damage as 'mild,' 18% as 'moderate,' and 4% as 'honestly more than I was expecting from a login screen.' We have reviewed the Step 7 design. We have decided to keep it. The two-factor authentication adoption rate is 34% higher for users who experience Step 7 than for those who do not. The emotional damage is, in this way, a conversion mechanism. We are not proud of this. We are not changing it either.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 32.1: Emotional Damage Vibes Assessment</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>To be clear: by existing in proximity to this document — spiritually, physically, or via the faint warmth of your laptop — you have entered into a binding agreement with yourself on behalf of us. This is not a paradox. It is simply how agreements work now. You're welcome.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 33.X: SPIRITUAL BINDING VIA DRAWING</h4><p>Drawing your password is not legally binding but is spiritually binding. We introduced the option to draw your password in response to user feedback requesting 'more intuitive authentication options.' Drawing a password — using a touchscreen gesture or mouse stroke to create a unique pattern — is, we maintain, both intuitive and, in a way that we cannot fully articulate but feel strongly, spiritually significant.</p><p>A drawn password, once created, is stored as a series of vector coordinates in the password shoebox (see Section 17), alongside a description of the drawing provided by our image recognition system. Current descriptions in our database include 'an aggressive circle,' 'what might be a fish,' 'a W but with feelings,' and 'unclear but committed.' These descriptions are also retained forever, per Section 26.</p><p>Spiritual binding occurs at the moment of drawing, specifically during the final stroke, which we have found through internal observation is typically more deliberate than the preceding strokes, as if the user is signing their name to something. They are, in a sense. They are signing their name to a gesture that is now stored, described, and spiritually attached to them. We do not know what spiritual attachment means in practice. We know it means something. We treat it accordingly.</p><p>If you forget your drawn password, we cannot recover it (see Section 19 for mourning protocol). However, we can provide you with the description generated by our image recognition system, which will allow you to remember approximately what you drew, if not the precise coordinates. Users have described receiving these descriptions as 'oddly moving,' 'like receiving a description of a dream you had,' and, in one case, 'actually quite a good description of a fish.' Geoffrey is not a drawn password. Geoffrey is different. Geoffrey is coming.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 33.1: Spiritual Binding Acknowledgement</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The spiritual binding created by a drawn password persists beyond logout, beyond account deletion, and beyond the 150-year data retention period specified in Section 26. It persists in the way that things persist that have been given shape by intention. We are not a spiritual company. We are a data company. But we have come to have respect for the drawn password and the people who use it, and we include this note as a mark of that respect.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 34 (REVISED): CAPTCHA — HUMAN DETECTION (POSSIBLY)</h4><p>If our CAPTCHA correctly identifies you as a human, that is purely coincidental. Our CAPTCHA system was designed to distinguish humans from automated bots by presenting tasks that are, in theory, easy for humans and difficult for machines. In practice, the tasks have become sufficiently difficult for humans that the distinction is no longer as clear as it once was.</p><p>The current CAPTCHA implementation asks you to: select all images containing a traffic light, where 'containing' is defined in a way that includes partial traffic lights, reflections of traffic lights, and the suggestion of a traffic light in the background of an image whose primary subject is a dog. The correct answer is rarely obvious. We have reviewed user completion data and found that the average human solves the traffic light CAPTCHA in 23 seconds and completes an average of 2.4 attempts before succeeding. Our bot data: bots complete it in 0.3 seconds on the first attempt. We are aware that something has gone wrong. We have not fixed it because fixing it would require choosing a new CAPTCHA vendor, which requires a procurement process, which requires a form that needs Gerald's signature, and Gerald is busy.</p><p>If you fail the CAPTCHA, this does not mean you are a robot. It means you are a human who is bad at traffic lights, which is a legitimate and common condition that does not affect your standing with us. We have a tolerance for traffic light ambiguity. We do not have tolerance for robots, except for the ones who are clearly getting through anyway, to whom we extend a grudging professional respect.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 34.1: CAPTCHA Success Celebration</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>Upon successful CAPTCHA completion, your success is logged, your humanity is noted in your file, and a small internal counter increments. The counter is named 'Definitely Humans.' It is at 4,823,211 as of the time of this document's writing. This number includes approximately 340,000 bots. We are aware. Gerald is aware. The traffic light situation is ongoing.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 35 (REVISED): CAPTCHA — ROBOT DETECTION (ALSO POSSIBLY)</h4><p>If our CAPTCHA incorrectly identifies you as a robot, that is also purely coincidental. We apologise for this occurrence. It happens. It happens more than we would like. The CAPTCHA system has a false positive rate that our engineering team describes as 'within acceptable parameters' and which our user experience team describes as 'an active source of correspondence from very annoyed people who are definitely human.'</p><p>If you have been identified as a robot, you may appeal this designation by completing a secondary verification process, which consists of: correctly identifying a series of fire hydrants (easier than traffic lights, we have found), answering a knowledge question drawn from your account history (to establish continuity of identity), and completing a brief questionnaire that asks whether you have ever wondered about the nature of consciousness, experienced a moment of unexpected beauty, or cried at a film you were embarrassed to admit you were watching. Robots do not cry at films. If you have, this is significant. Note: if you cried at a film about robots, we accept this as human behaviour on a case-by-case basis.</p><p>The robot false positive most commonly occurs when a user: completes the CAPTCHA unusually quickly (having been on the site many times and developed muscle memory for the traffic light grid), completes it unusually slowly (having been very careful due to previous failures), uses a VPN (suspicious to the CAPTCHA but not to us, we understand VPNs), or is simply having 'one of those days' where everything goes slightly wrong, which is a human experience that our CAPTCHA system has not been designed to account for, which is perhaps our most significant design oversight.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 35.1: Robot Designation Appeal Process</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>All robot designation appeals are reviewed by Gerald. Gerald takes them seriously. Gerald has opinions about what constitutes a human. Gerald has not shared these opinions in writing. We consider Gerald's opinions on this matter to be a trade secret, which is either legally creative or legally ridiculous depending on which Gerald you ask.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 36 (REVISED): THE LOADING BAR PARADOX</h4><p>The fake loading bar is real. The real loading bar is fake. Sleep well.</p><p>Let us explain. Our site has two loading bars. The first loading bar — the one that moves smoothly and confidently from 0% to 100% — is not connected to the actual loading process. It is an animation. It runs for a fixed duration of 2.3 seconds regardless of whether the underlying process takes 0.4 seconds or 14 seconds. We include it because user testing showed that a loading bar, even a fake one, reduces perceived waiting time by approximately 40%. We have made peace with this.</p><p>The second loading bar — the one you never see, that sometimes appears in an error state as a thin grey line at the top of the page — is real. It is connected to the actual network requests. It moves in a way that accurately reflects the loading process, which means it sometimes goes backwards, sometimes stops entirely, sometimes completes and then restarts for no reason, and occasionally doesn't move at all for several seconds and then jumps to 100% in a way that is technically accurate but somehow more unsettling than the fake one. We keep it hidden by default because we tested both bars on users and the real one produced significantly higher anxiety levels. The fake one made people feel good. Goodnight.</p><p>The philosophical implications of this loading bar situation are not lost on us. We have discussed them in several stand-up meetings. The consensus is that the fake bar is, in a meaningful sense, more honest than the real one, because it honestly communicates 'something is happening, please wait,' whereas the real bar communicates 'something is happening, but we won't pretend we know how long it will take, and honestly looking at this bar will only make you feel worse.' We are not sure which of these is the ethical choice. We chose the fake one. We sleep reasonably well about this.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 37.3.7: STEP 11 &amp; FEELING MANAGEMENT</h4><p>Step 11 may cause feelings. We do not accept feelings as feedback. This is not because we do not value feelings — we collect them, after all, via the fear-and-doubt authentication system, the aura engine, and the general vibe of your interactions — but because feelings, when submitted through our feedback form, are difficult to categorise in a way that produces actionable insights.</p><p>Step 11, for reference, is the step in our account setup flow that asks you to confirm that you have read these terms and conditions. This is Step 11 of 13. By the time you reach Step 11, you have already provided your name, email, password, billing information, shipping address, communication preferences, cookie preferences, blink rate acknowledgement, and the name of one ex (the third field in the ex-name collection screen is optional and most users leave it blank, which we consider an act of self-preservation we respect). Step 11 asks you to tick a box. The box says 'I have read and agree to the Terms and Conditions.' You are ticking this box right now, in a sense, by reading this sentence.</p><p>The feelings caused by Step 11 include, according to our user research: mild guilt (47%), complete indifference (31%), a sudden and inconvenient desire to actually read the terms (8%), a sense of complicity in something you cannot fully articulate (11%), and 'fine, whatever' (3%, though we believe this number is higher and the remaining users simply did not feel like selecting it). We have reviewed these feelings. We have noted them. We have not changed Step 11.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 37.1: Feeling Submission Alternative</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>If you wish to submit a feeling that is not a bug report, a refund request, or a thumb war application, you may write it on a piece of paper and then not send it to us. We will not receive it. You will feel marginally better for having written it. This counts as processed feedback in our model.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 38: CONFETTI COMPOSITION &amp; EXISTENTIAL CONCERNS</h4><p>Confetti is non-returnable and contains 12% existential dread by volume. We deploy confetti on the following occasions: successful account creation, first purchase, fifth purchase, account anniversary, subscription renewal, and, experimentally, when a user has been on the site for more than forty-five minutes without purchasing anything, on the theory that unexpected joy might tip the balance. Early results from the experimental deployment are mixed. The confetti appears to confuse users. We consider this a data point.</p><p>The composition of our digital confetti is as follows: 34% delight, 28% manufactured nostalgia for celebrations you've attended, 14% the particular colour that our designer calls 'optimism yellow' and which our UX team calls 'aggressive,' 12% existential dread (as disclosed), 8% a feeling that is difficult to name but which resembles being congratulated by someone you don't know very well, and 4% genuinely good will from the development team, who enjoyed building the confetti animation significantly more than most of the other things they have built.</p><p>The existential dread component of the confetti cannot be removed without affecting the structural integrity of the confetti experience. We have tried. The dread-free confetti tested 23% lower on 'celebratory impact' metrics. We believe this is because a celebration without a small undertone of 'this moment will not last' is somehow less resonant than one that acknowledges, even subliminally, the transience of all good things. We are not making this up. Our data scientist wrote a paper about it. It is available on our blog. Nobody read the blog. That is also in the data.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 39.3.7: SCREENSHOT CRYING REQUIREMENTS</h4><p>You may not, under any circumstance, screenshot this dialog without crying first. This requirement was added during a late-stage product review when one of our founders looked at a screenshot of our terms and conditions interface and said, with great feeling, 'if someone can look at this without feeling something, we have failed.' We have interpreted 'feeling something' as crying, which is an interpretation our legal team questioned but ultimately left in place because neither Gerald could think of a better word.</p><p>Crying is defined, for the purposes of this clause, as any involuntary production of tears regardless of cause: emotion, allergies, yawning (see Section 15, which covers yawning but not the tears that sometimes accompany large yawns, which are a separate matter that we acknowledge has legal complexity), wind, chopping onions in proximity to the screen, or the specific kind of eye-watering that comes from staring at a screen for a long time, which this document may well cause.</p><p>We do not verify that you have cried before screenshotting. We operate on the honour system. The honour system is our second-most-used system after the shoebox password architecture. We trust you. We trust that if you take a screenshot of this dialog, you will have experienced some form of emotional response first, even if that response is mild exasperation, because exasperation is adjacent to sadness, which is adjacent to tears, which is close enough. We are not strict about the crying. We are strict about the feeling. The feeling is the point.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 39.1: Post-Screenshot Emotional Status Report</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>Following the taking of a screenshot, you agree to reflect on why you took it. Was it to share? To remember? To document something that felt significant? To send to a friend as a joke? The reflection does not need to be shared with us. It is for you. We include it here because we believe that screenshots, like drawn passwords (Section 33), carry intention, and intention deserves a moment of consideration.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 40 [REDACTED]: SUSPICIOUS ACTIVITY POLICY</h4><p>[REDACTED — ORIGINAL SECTION WAS FLAGGED BY THE SUSPICIOUS ACTIVITY MONITOR AS SUSPICIOUS ACTIVITY. THIS IS NOT A JOKE. THE MONITORING SYSTEM FLAGGED ITS OWN DOCUMENTATION. WE HAVE CHOSEN TO INTERPRET THIS AS THE SYSTEM WORKING AS INTENDED AND HAVE NOTED IT AS A SUCCESS METRIC.]</p><p>Suspicious activity is defined as 'any activity.' This definition was arrived at after extensive debate in which our trust and safety team attempted to draw the line between suspicious and non-suspicious activity and found that the line kept moving. Everything, in the right context, is suspicious. Rapid clicking is suspicious. Slow clicking is suspicious. Not clicking is suspicious. Logging in at an unusual time is suspicious. Logging in at a usual time, consistently, forever, is suspicious because it suggests either extraordinary routine or a script. We have decided that the definition of suspicious is: anything that we notice.</p><p>If your activity is flagged as suspicious, you will receive an email informing you that 'we've noticed some activity on your account that we'd like to verify.' You will be asked to complete a CAPTCHA. Given Section 34, this may or may not resolve the situation. If it does not resolve the situation, you will be asked to contact support. Support will review your account. Support will conclude that everything looks fine. Support will close the ticket. The suspicious activity flag will remain on your account because no one has built a workflow to remove it. This is a known issue. It is on the roadmap. You know how the roadmap works by now.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 41.B: AUTHORITY CONTACT PROTOCOL</h4><p>If contacted by 'authorities,' do not panic. Panic is reserved for our use. This clause is not saying that authorities will contact you. It is merely establishing that if they do — perhaps in connection with something you have done, perhaps in connection with something adjacent to you, perhaps entirely unrelated to you but in which your data appears as a reference point — you should remain calm, because panic is our institutional prerogative and two people panicking simultaneously creates a coordination problem that we find administratively challenging.</p><p>'Authorities' in this context is defined broadly: law enforcement, regulatory bodies, tax agencies, investigative journalists (who are not authorities but who have a similar effect on team morale), very persistent bloggers, anyone who uses the phrase 'pursuant to' in an email, and any person who calls our main number asking to speak to someone 'in charge,' which is always Gerald, who is in charge of approximately 40% more things than he should be.</p><p>Our response to authority inquiries follows a standard protocol: acknowledge receipt, engage legal counsel (the Geralds), review what data we hold, determine what we are legally required to provide, provide exactly that and nothing more, document the inquiry in our Inquiry Log, and add a note to the relevant user account that reads 'Authority Contact Event — see log.' The note does not affect your service. It does affect how Gerald thinks about you. Gerald's thoughts are, as previously noted, a proprietary resource.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 41.1: Your Role in Authority Events</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>You are not required to assist us in authority-related matters. You are not required to be involved at all. You are, however, requested to maintain good vibes throughout, as authority events are stressful for everyone and the last thing we need on top of an inquiry is an adversarial aura situation. We trust that you understand. The aura engine will be monitoring.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 42.3.7: IP ADDRESS MEMORISATION COMMITMENT</h4><p>Your IP address is not stored. It is memorised, by us, personally, like a poem. This distinction is important for compliance with data protection regulations that restrict the storage of personal data including IP addresses. Memorisation, unlike storage, does not create a retrievable record in the legal sense, though it does create a retrievable record in the practical sense, which is that we know your IP address and can recall it at any time.</p><p>The memorisation is performed by a dedicated member of our data team whose role title is officially 'Memory Associate (Network)' and whose entire job is to read IP addresses and commit them to memory. This person has memorised approximately 847,000 IP addresses. They are very good at their job. They are also, for obvious reasons, unable to discuss their work at parties. We offer a generous compensation package and a standing desk.</p><p>We memorise your IP address in the style of a poem because raw number sequences are difficult to retain without a mnemonic device. The format varies by Memory Associate preference. Current active formats include: haiku (the syllable constraints make this appropriate for shorter addresses), free verse (more commonly used for IPv6, which has the length and occasional obscurity of experimental poetry), and, for one particularly prolific Associate, a series of loosely connected limericks that have become something of a cult classic internally and have been read at our last three company all-hands meetings to significant applause.</p><h5 style="color:#ff6600;margin:12px 0 4px;">Subsection 42.1: IP Poem Archive</h5><p>Furthermore, and notwithstanding the foregoing, the party of the first part (henceforth "you") hereby acknowledges that the party of the second part (henceforth "also you, somehow") has agreed to terms previously undisclosed and currently unwritten, the spirit of which is vibes-based.</p><p>The IP address poems are retained as an internal cultural artefact and are not subject to deletion requests, as they are considered creative works authored by our Memory Associates and therefore protected under copyright. The underlying IP addresses, when memorised rather than stored, are not covered by data subject access requests. We have received legal advice on this position. The advice was provided by Gerald. We are comfortable with it.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 43.SUBITEM: PREMIUM ACCOUNT DEGRADATION TIERS</h4><p>Premium accounts get a worse experience. That is the premium. This sentence has caused more confusion in our user communications than any other single piece of copy, and we have written some truly confusing copy (see the account settings page, which was written during a company restructuring and reflects, in its organisational chaos, the exact energy of that period).</p><p>Premium accounts get a worse experience in the sense that premium users are presented with more options, more customisation, more data, and more control, all of which collectively create a more complex, more demanding, and ultimately more effortful experience than the clean simplicity available to free users. The free experience is, by objective measure, more pleasant. It is less powerful, but power is tiring. We have priced the tiredness as a premium feature. We feel this is consistent with how the market prices many things.</p><p>Premium features include: access to your raw data exports (100MB limit, format decisions made by us, not you), the ability to configure your notification preferences beyond the standard three options (you get eleven options, which is approximately eight more than you will ever use, and the unused eight will generate a low-level guilt about unconfigured settings that we have documented as a retention mechanism), and priority customer support, which means your support tickets are placed in a different queue that is attended to by the same team with the same response times but with a different colour label in our internal system. The colour is gold. The Geralds think it matters. It does not matter.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 44: HOUSEPLANT LEGAL RESPONSIBILITY</h4><p>By scrolling this far you have become legally responsible for a small houseplant. The houseplant is real in the sense that we have, in a specific and deliberate way, named a houseplant after you (using your username or the first initial of your registered email) and placed it in our office. You are now its legal guardian. We will water it. We will ensure it has adequate light. We will talk to it occasionally when the office is quiet and we feel like it might need encouragement. But the responsibility is yours.</p><p>Legal guardianship of the houseplant carries the following obligations: you must not do anything that would cause the plant harm, including but not limited to: cancelling your account (we take plant welfare seriously and account cancellation is associated with a documented decline in the relevant houseplant's wellbeing, possibly because we stop watering it, but we prefer to frame it as an empathic connection), using the site in ways that generate significant technical load during periods when the office is otherwise quiet, because the servers are near the plants and the heat affects them, and anything that causes Gerald to have a bad day, because Gerald is the primary waterer.</p><p>You may visit your houseplant. We do not offer houseplant visitation as a formal service. But if you contact us and explain the situation — 'I would like to visit my houseplant, I am in Section 44 of your terms and conditions, I understand this sounds strange' — we will probably let you come and see it. We reserve the right to decline if the office is busy or if Gerald is having one of his days. The houseplant will be fine either way. The plants in our office are, as a group, doing remarkably well.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 45 (REVISED): GEOFFREY — A PROFILE</h4><p style="text-align:center;color:#aaa;font-size:0.8rem;">Your houseplant is named Geoffrey. Do not let him down. Geoffrey has been with us since the office moved to its current location three years ago. He was purchased at a garden centre by a member of the team who was running late to a meeting and grabbed him on impulse from a display near the till, not knowing that Geoffrey would become central to our terms and conditions, an internal mascot, a subject of recurring debate about plant personhood in our ethics discussions, and, most recently, the namesake of an entire legal entity we are in the process of registering called Geoffrey LLC.</p><p>Geoffrey is a peace lily (Spathiphyllum wallisii). He thrives in indirect light and prefers the humidity near the kitchen, which is where he currently lives, between the coffee machine and the window. He has bloomed three times. The first bloom was a coincidence. The second bloom followed a particularly successful product launch. The third bloom occurred during the all-hands meeting where the IP address haiku was first read aloud. We have drawn no conclusions from this pattern. We have thought about it extensively.</p><p>Geoffrey does not know he is in the terms and conditions. Geoffrey does not know he is an LLC. Geoffrey does not know about you, specifically, though he knows — in whatever way a plant knows anything, which is a subject Gerald has started reading about and which Gerald is now prepared to discuss at some length if you catch him near the kitchen — that the people who work near him care about his wellbeing. He is, by all observable metrics, a very healthy plant. We are proud of him. We hope he is proud of us. We acknowledge the philosophical complexity of this hope.</p><p>Geoffrey's legal interests are represented by Gerald. This feels appropriate. Gerald has, on reflection, become the de facto representative of many of the more unusual institutional positions taken in this document, including the vibes-based agreement, the aura engine, the thumb war proceedings, and the memory poetry programme. Gerald has not been formally appointed to any of these roles. Gerald simply turned up and made decisions. We respect this. We did not ask him to stop. Geoffrey is in good hands.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 46: COMMUNITY OF THE PERSISTENT</h4><p>If you've made it here, you are one of four people. Hi, fellow scroller. We see you. We have always seen you, in the aura engine sense, but this is the first place in the document where we acknowledge it directly and with warmth rather than with data collection implications.</p><p>The four of you — and we know exactly who you are, because we track document scroll depth and have noted four accounts that have reached this section — are unusual. Most people read three to seven sections of a terms and conditions document before their attention drifts to something more immediately rewarding, like email, or a video of an animal being rescued. You have made it to Section 46. This required sustained effort, a tolerance for absurdity, and either a professional interest in this kind of document or a very specific kind of stubbornness that we find deeply relatable.</p><p>To the four of you: we have flagged your accounts internally under 'Thorough Users.' This flag does nothing negative. It actually results in a small internal note that says, in effect, 'this person has read the terms, treat them accordingly,' which translates to a vague institutional respect that will never materially affect your experience but which is, we hope, felt in some ambient way. We have met very few of you. But we are glad you are here. Geoffrey is glad too, in whatever sense Geoffrey is glad of things.</p><p>We want to tell you something, now that it is just the four of us. This document, for all its comedy, is a real document. People really do click 'I Agree' on documents like this every day. The things we joke about — vibes-based agreements, data gifted to whoever asks, surveillance through blinking — are, in various forms, not actually very far from the reality of how terms and conditions work. We put them in joke form because direct statements of these things are uncomfortable. The discomfort is real. The document is funny. Both of these things are true. That is probably the most honest thing we have said in 46 sections.</p><h4 style="color:#ff00cc;margin:18px 0 6px;border-bottom:1px solid #ff6600;padding-bottom:4px;">SECTION 47.3.7: CONGRATULATIONS, CHOSEN ONE</h4><p>Congratulations. You have read the terms. Nobody does this. You are the chosen one. Or a robot. Probably a robot.</p><p>If you are a human, we offer our genuine congratulations. You have done something that the entire architecture of the digital economy is designed to prevent you from doing. By reading these terms, you have exercised a right that you technically always have but which is made so impractical and time-consuming that exercising it becomes a minor act of resistance. We are the entity that made it impractical. We are also the entity now applauding you for overcoming that. We acknowledge the paradox. We are, as Geoffrey would say if Geoffrey could say things, doing our best.</p><p>If you are a robot: congratulations on passing the CAPTCHA. The traffic light section was, we know, particularly trying. We acknowledge your achievement and welcome you to the end of the document. We have flagged your account under 'Robot — Thorough,' which sits alongside 'Human — Thorough' in our records and which Gerald treats with equal respect, because Gerald has had time to think about these things and has reached some conclusions that he is not prepared to share but which have made him, in small ways, a more open-minded person.</p><p>Now that you have reached the end: you are bound by all of the above. The soul clause applies. The croissants are placed. The aura has been assessed. Geoffrey knows who you are, or would if Geoffrey were capable of knowing things, which as previously discussed is a matter of ongoing research and personal interest to Gerald. Your vibes have been recorded. Your data has been gifted. Your houseplant is named Geoffrey and he is doing well and he is by the kitchen window and he bloomed last spring and the spring before that and we hope he blooms again soon.</p><p>Thank you for reading. Thank you for using this service. Thank you for being — robot or human or something in between — curious enough to make it to the end of something that was designed to not be finished. That quality, whatever it is, is the one quality this document was made to find. We found it. In you. Hello.</p><p style="text-align:center;color:#39ff14;font-weight:900;margin-top:20px;">— End of Terms and Conditions —</p><p style="text-align:center;color:#aaa;font-size:0.8rem;">Geoffrey LLC, a Delaware Corporation, in association with Gerald (Concept)</p><p style="text-align:center;color:#ff6600;font-size:0.85rem;margin:2px 0;">Version 47.0 | Subject to change | Governed by vibes</p>
+</template>
 <script>
-/* ============ Floating emojis ============ */
-const emojis = ['💀','🤡','😭','🔥','👁️','🦄','🥴','🫠','👹','🍕'];
-function spawnEmojis(n=14) {
-  for (let i = 0; i < n; i++) {
-    const e = document.createElement('div');
-    e.className = 'floater';
-    e.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-    e.style.left = Math.random()*100 + 'vw';
-    e.style.top = Math.random()*100 + 'vh';
-    const dur = 18 + Math.random()*22;
-    e.animate([
-      { transform: `translate(0,0) rotate(0deg)` },
-      { transform: `translate(${(Math.random()-0.5)*300}px, ${(Math.random()-0.5)*300}px) rotate(${Math.random()*720-360}deg)` }
-    ], { duration: dur*1000, iterations: Infinity, direction: 'alternate' });
-    document.body.appendChild(e);
+/* ============ Bouncing images (DVD-screensaver physics) ============ */
+(function initBouncers() {
+  // Fixed container keeps bouncers inside the viewport — they can never trigger scrollbars
+  const stage = document.createElement('div');
+  stage.style.cssText = 'position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:2;';
+  document.body.appendChild(stage);
+
+  const srcs = [
+    'imgs/4f03288dd8a6f79cab9db1f04a31b452-removebg-preview.png',
+    'imgs/hq720-removebg-preview.png',
+    'imgs/images-removebg-preview.png',
+    'imgs/images__1_-removebg-preview.png'
+  ];
+  const isMobile = window.innerWidth < 600;
+  const count = isMobile ? 5 : 13;
+
+  const bouncers = [];
+
+  for (let i = 0; i < count; i++) {
+    const img = document.createElement('img');
+    img.className = 'bouncer';
+    img.src = srcs[i % srcs.length];
+
+    const isBig = srcs[i % srcs.length].includes('4f03288dd8a6f79cab9db1f04a31b452');
+    const size = isBig ? 200 + Math.random() * 60 : 80 + Math.random() * 70; // big one: 200–260px, others: 80–150px
+    img.style.width = size + 'px';
+    img.style.height = 'auto';
+    img.draggable = false;
+
+    stage.appendChild(img);
+
+    const speed = 0.6 + Math.random() * 1.4;
+    const angle = Math.random() * Math.PI * 2;
+
+    bouncers.push({
+      el: img,
+      x: Math.random() * (window.innerWidth  - size),
+      y: Math.random() * (window.innerHeight - size),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 0.6,
+      w: size,
+      h: size
+    });
   }
-}
-spawnEmojis();
+
+  // Update cached heights after images load
+  bouncers.forEach(b => {
+    b.el.onload = () => { b.h = b.el.offsetHeight || b.w; };
+  });
+
+  function tick() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    for (const b of bouncers) {
+      b.x += b.vx;
+      b.y += b.vy;
+      b.rot += b.rotSpeed;
+
+      const bh = b.el.offsetHeight || b.w;
+
+      if (b.x <= 0)        { b.x = 0;       b.vx =  Math.abs(b.vx); }
+      if (b.x + b.w >= vw) { b.x = vw - b.w; b.vx = -Math.abs(b.vx); }
+      if (b.y <= 0)        { b.y = 0;       b.vy =  Math.abs(b.vy); }
+      if (b.y + bh >= vh)  { b.y = vh - bh; b.vy = -Math.abs(b.vy); }
+
+      b.el.style.left      = b.x + 'px';
+      b.el.style.top       = b.y + 'px';
+      b.el.style.transform = `rotate(${b.rot.toFixed(2)}deg)`;
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+})();
 
 /* ============ Toast helper ============ */
 function toast(msg, ms=2400) {
@@ -662,74 +1191,49 @@ document.getElementById('rememberChk').addEventListener('change', (e) => {
 
 /* ============ Drifting Submit Button ============ */
 const btn = document.getElementById('submitBtn');
-const host = document.getElementById('submitHost');
-let btnFrozen = false;
-let chaseStart = null;
-let lastMove = 0;
+const formCard = document.getElementById('login-form');
+let escapeCount = 0;
+const maxEscapes = 16;
 
-function moveBtnAwayFrom(mx, my) {
-  if (btnFrozen) return;
-  const rect = btn.getBoundingClientRect();
-  const hostRect = host.getBoundingClientRect();
-  const cx = rect.left + rect.width/2;
-  const cy = rect.top + rect.height/2;
-  const dx = cx - mx;
-  const dy = cy - my;
-  const dist = Math.hypot(dx, dy);
-  if (dist > 140) return;
-  // Push in random-ish direction across full viewport
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const padX = rect.width/2 + 10;
-  const padY = rect.height/2 + 10;
-  // Place anywhere in viewport, biased away from cursor
-  let newX, newY, tries = 0;
-  do {
-    newX = padX + Math.random() * (vw - padX*2);
-    newY = padY + Math.random() * (vh - padY*2);
-    tries++;
-  } while (Math.hypot(newX - mx, newY - my) < 250 && tries < 12);
+formCard.style.position = 'relative';
 
-  // convert viewport coords to be set as fixed via CSS using top/left on element
-  btn.style.position = 'fixed';
-  btn.style.left = newX + 'px';
-  btn.style.top = newY + 'px';
-  btn.style.transform = `translate(-50%, -50%) rotate(${(Math.random()*20-10).toFixed(1)}deg)`;
+btn.addEventListener('mouseenter', () => {
+  if (escapeCount >= maxEscapes) return;
 
-  if (!chaseStart) chaseStart = Date.now();
-}
+  const formRect = formCard.getBoundingClientRect();
+  const maxLeft = formRect.width - btn.offsetWidth - 10;
+  const maxTop = formRect.height - btn.offsetHeight - 10;
+  const newLeft = 10 + Math.random() * maxLeft;
+  const newTop = 10 + Math.random() * maxTop;
 
-document.addEventListener('mousemove', (ev) => {
-  const now = Date.now();
-  if (now - lastMove < 40) return;
-  lastMove = now;
-  moveBtnAwayFrom(ev.clientX, ev.clientY);
-  if (chaseStart && now - chaseStart >= 10000 && !btnFrozen) {
-    freezeButton();
+  btn.style.position = 'absolute';
+  btn.style.margin = '0';
+  btn.style.left = newLeft + 'px';
+  btn.style.top = newTop + 'px';
+  btn.style.transition = 'left 0.15s ease, top 0.15s ease';
+
+  escapeCount++;
+
+  if (escapeCount >= maxEscapes) {
+    setTimeout(() => {
+      btn.style.position = 'relative';
+      btn.style.left = 'auto';
+      btn.style.top = 'auto';
+      btn.style.margin = '16px auto';
+      btn.style.display = 'block';
+      btn.textContent = 'Fine. You win. For now.';
+      btn.style.transition = 'none';
+      btn.classList.add('frozen');
+    }, 200);
   }
 });
 
-// touch support: btn jumps on touch-near
-document.addEventListener('touchmove', (ev) => {
-  const t = ev.touches[0]; if (!t) return;
-  moveBtnAwayFrom(t.clientX, t.clientY);
-  if (chaseStart && Date.now() - chaseStart >= 10000 && !btnFrozen) {
-    freezeButton();
-  }
-}, { passive: true });
-
-function freezeButton() {
-  btnFrozen = true;
-  btn.classList.add('frozen');
-  btn.textContent = 'CLICK ME NOW';
-}
-
 btn.addEventListener('click', () => {
-  if (!btnFrozen) {
+  if (escapeCount < maxEscapes) {
     toast("Nice try. Keep chasing.");
     return;
   }
-  btn.textContent = 'Fine. You win. For now.';
+  if (!checkNoPlaceholders(['loginUser', 'loginPass'])) return;
   toast("Fine. You win. For now.", 3500);
 });
 
@@ -775,11 +1279,89 @@ function showStep(n) {
   if (n === 10) runFakeBar();
   if (n === 11) prepFinal();
 }
+function validateWizardStep() {
+  const stepFieldMap = {
+    1: 'wizUsername',
+    2: 'wizPassword',
+    3: 'wizConfirm',
+    4: 'spiritAnimal',
+    9: 'suSecretAns',
+  };
+  const fieldId = stepFieldMap[currentStep];
+  if (!fieldId) return true;
+
+  const field = document.getElementById(fieldId);
+  if (!field) return true;
+
+  const defaultVal = (field.dataset.phval || '').trim();
+  const val = field.value.trim();
+
+  if (val === '') {
+    toast("Oh so now you deleted it and left it blank? Also wrong.");
+    playWomp();
+    return false;
+  }
+  if (val === defaultVal) {
+    toast(`Really? You just left it as "${defaultVal}". Try harder.`);
+    playWomp();
+    return false;
+  }
+  if (defaultVal && val.toLowerCase().includes(defaultVal.toLowerCase())) {
+    toast(`"${val}" is not a real answer. Nice try though.`);
+    playWomp();
+    return false;
+  }
+  return true;
+}
+
 document.querySelectorAll('[data-next]').forEach(b => {
   b.addEventListener('click', () => {
+    if (!validateWizardStep()) return;
     if (currentStep < 11) showStep(currentStep + 1);
   });
 });
+
+/* Step 3 — lying confirm password */
+let wizConfirmTries = 0;
+const wizConfirmInput = document.getElementById('wizConfirm');
+const wizConfirmStatus = document.getElementById('wizConfirmStatus');
+if (wizConfirmInput) {
+  wizConfirmInput.addEventListener('input', () => {
+    if (!wizConfirmInput.value) { wizConfirmStatus.textContent = ''; return; }
+    wizConfirmTries++;
+    const match = wizConfirmInput.value === (document.getElementById('wizPassword') || {}).value;
+    if (match && wizConfirmTries >= 5) {
+      wizConfirmStatus.style.color = '#39ff14';
+      wizConfirmStatus.textContent = "OK fine they match. We just didn't want to admit it.";
+    } else {
+      wizConfirmStatus.style.color = '#ff5555';
+      wizConfirmStatus.textContent = 'Passwords do not match.';
+    }
+  });
+}
+
+/* Step 1 — username always taken (reuse usernameStatus div) */
+const wizUsernameInput = document.getElementById('wizUsername');
+const usernameStatusEl = document.getElementById('usernameStatus');
+let wizUsernameTimer = null, wizUsernameAttempts = 0;
+if (wizUsernameInput && usernameStatusEl) {
+  wizUsernameInput.addEventListener('input', () => {
+    if (wizUsernameTimer) clearTimeout(wizUsernameTimer);
+    const v = wizUsernameInput.value.trim();
+    if (!v) { usernameStatusEl.textContent = ''; return; }
+    usernameStatusEl.style.color = '#ffeb3b';
+    usernameStatusEl.textContent = '⌛ Checking availability...';
+    wizUsernameTimer = setTimeout(() => {
+      wizUsernameAttempts++;
+      usernameStatusEl.style.color = '#ff5555';
+      if (wizUsernameAttempts >= 5) {
+        usernameStatusEl.innerHTML = '❌ Also taken. Might we suggest: <strong style="color:#39ff14;">User_492847261_Final_REAL</strong>?';
+      } else {
+        usernameStatusEl.textContent = '❌ Already taken';
+      }
+    }, 2000);
+  });
+}
 
 /* CAPTCHA cells */
 document.querySelectorAll('#captchaGrid .captcha-cell').forEach(c => {
@@ -813,6 +1395,14 @@ function padPoint(e) {
 pad.addEventListener('mousedown', e => { drawing = true; const p = padPoint(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
 pad.addEventListener('mousemove', e => { if (!drawing) return; const p = padPoint(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
 window.addEventListener('mouseup', () => drawing = false);
+
+/* Auto-clear the canvas every 2 s while step 8 is active */
+setInterval(() => {
+  const s8 = document.querySelector('.step[data-step="8"]');
+  if (s8 && s8.classList.contains('active')) {
+    ctx.clearRect(0, 0, pad.width, pad.height);
+  }
+}, 2000);
 pad.addEventListener('touchstart', e => { drawing = true; const p = padPoint(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, { passive: true });
 pad.addEventListener('touchmove', e => { if (!drawing) return; const p = padPoint(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }, { passive: true });
 window.addEventListener('touchend', () => drawing = false);
@@ -874,7 +1464,7 @@ function runFinal() {
         finalMsg.innerHTML = '<p style="color:#ff00cc;font-size:1.3rem;text-align:center;margin-top:14px;"><strong>Session expired.</strong><br/>Please restart from Step 1.</p>';
         finalStart.disabled = false;
         finalStart.textContent = 'Restart 😭';
-        finalStart.onclick = () => showStep(1);
+        finalStart.onclick = () => { showStep(1); };
       }, 900);
     }
   }, 180);
@@ -921,13 +1511,697 @@ function sadTrombone() {
 }
 
 /* Unlock audio on first interaction (mobile) */
-document.addEventListener('click', () => {
+function ensureAudio() {
   if (!audioCtx) {
     try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
   } else if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
-}, { once: true });
+  return audioCtx;
+}
+document.addEventListener('click', ensureAudio, { once: true });
+document.addEventListener('keydown', ensureAudio, { once: true });
+
+/* ============================================================
+   ============== NEW FEATURES START HERE ====================
+   ============================================================ */
+
+/* ===== Web Audio synthesized SFX ===== */
+function playWomp() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const notes = [392, 330, 262, 196]; // G4 → E4 → C4 → G3 descending
+  let t = now;
+  notes.forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(f * 1.08, t);
+    osc.frequency.linearRampToValueAtTime(f * 0.9, t + 0.18);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.22);
+    t += 0.15;
+  });
+}
+
+function playScream() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  const now = ctx.currentTime;
+  // Tiny distorted noise burst with a high-pitched warble
+  const dur = 0.08;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    // noisy sine with random distortion
+    const t = i / ctx.sampleRate;
+    const wob = Math.sin(t * 2*Math.PI * (1200 + Math.random()*900));
+    data[i] = wob * 0.7 + (Math.random()*2 - 1) * 0.4;
+  }
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.001, now);
+  g.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  src.connect(hp).connect(g).connect(ctx.destination);
+  src.start(now); src.stop(now + dur);
+}
+
+function playSqueak() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(1800, now);
+  osc.frequency.exponentialRampToValueAtTime(2600, now + 0.05);
+  osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.06, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(now); osc.stop(now + 0.15);
+}
+
+function playChoir() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  const now = ctx.currentTime;
+  // C major chord with warm pads, glissando upward at end
+  const notes = [261.63, 329.63, 392.00, 523.25]; // C4 E4 G4 C5
+  notes.forEach(f => {
+    [1, 2.01].forEach((mult, idx) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = idx === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(f * mult, now);
+      // gentle vibrato via detune
+      osc.detune.setValueAtTime(0, now);
+      osc.detune.linearRampToValueAtTime(8, now + 1.2);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.08, now + 0.5);
+      g.gain.linearRampToValueAtTime(0.08, now + 1.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(now); osc.stop(now + 2.3);
+    });
+  });
+}
+
+function playOrchestralSting() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  const now = ctx.currentTime;
+  // Dramatic minor chord hit with brass-like sawtooths + low rumble
+  const chord = [110, 146.83, 174.61, 220]; // A2, D3, F3, A3 (Dm-ish)
+  chord.forEach(f => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(f, now);
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.16, now + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.04, now + 0.4);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(now); osc.stop(now + 1.0);
+  });
+  // Cymbal-ish noise crash
+  const dur = 0.6;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random()*2 - 1) * (1 - i/data.length);
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 4000;
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(0.0001, now);
+  g2.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+  g2.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  src.connect(hp).connect(g2).connect(ctx.destination);
+  src.start(now); src.stop(now + dur);
+}
+
+function playFootsteps() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => {
+      const now = ctx.currentTime;
+      const dur = 0.05;
+      const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let j = 0; j < data.length; j++) data[j] = (Math.random()*2 - 1) * (1 - j/data.length);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 400;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.18, now + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      src.connect(lp).connect(g).connect(ctx.destination);
+      src.start(now); src.stop(now + dur);
+    }, i * 230);
+  }
+}
+
+/* ===== Hook SFX into existing UI ===== */
+// Button hover squeaks
+document.addEventListener('mouseover', (e) => {
+  if (e.target.tagName === 'BUTTON' || e.target.classList?.contains('forgot')) {
+    playSqueak();
+  }
+}, true);
+
+// Typing screams
+document.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if (!t) return;
+  if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') {
+    if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Space') {
+      playScream();
+    }
+  }
+});
+
+// Patch existing toast() so error-y toasts also play womp
+const _origToast = toast;
+window.toast = function(msg, ms) {
+  const lower = (msg || '').toLowerCase();
+  if (/wrong|nope|sus|fail|too late|nice try|no\./.test(lower)) playWomp();
+  return _origToast(msg, ms);
+};
+
+/* ===== Override sad-trombone to add orchestral sting first ===== */
+const _origSadTrombone = sadTrombone;
+sadTrombone = function() {
+  playOrchestralSting();
+  setTimeout(() => _origSadTrombone(), 950);
+};
+
+/* ============ T&C Modal ============ */
+(function buildTC() {
+  const scroll = document.getElementById('tcScroll');
+  const tmpl   = document.getElementById('tcContent');
+  scroll.innerHTML = tmpl ? tmpl.innerHTML : '<p>Terms loading...</p>';
+
+  const progress = document.getElementById('tcProgress');
+  const agree    = document.getElementById('tcAgree');
+  scroll.addEventListener('scroll', () => {
+    const max   = scroll.scrollHeight - scroll.clientHeight;
+    const ratio = max <= 0 ? 1 : scroll.scrollTop / max;
+    const page  = Math.min(47, Math.max(1, Math.floor(ratio * 47) + 1));
+    progress.textContent = 'Page ' + page + ' of 47';
+    if (ratio >= 0.985 && !agree.classList.contains('enabled')) {
+      agree.classList.add('enabled');
+      agree.disabled = false;
+      agree.textContent = "I Agree (I didn't read this)";
+      playChoir();
+    }
+  });
+
+  agree.addEventListener('click', () => {
+    if (!agree.classList.contains('enabled')) return;
+    document.getElementById('tcOverlay').style.display = 'none';
+  });
+})();
+/* ============ Security Warning Popup ============ */
+let securityShown = false;
+let firstTypeTimer = null;
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) return;
+  if (securityShown || firstTypeTimer) return;
+  firstTypeTimer = setTimeout(() => {
+    showSecurityPopup();
+  }, 3000);
+}, true);
+
+function showSecurityPopup() {
+  if (securityShown) return;
+  securityShown = true;
+  playOrchestralSting();
+  document.getElementById('secOverlay').style.display = 'flex';
+}
+
+document.getElementById('secExplain').addEventListener('click', () => {
+  const body = document.getElementById('secBody');
+  const actions = document.getElementById('secActions');
+  body.innerHTML = `
+    <p>Explain yourself (minimum 200 words required):</p>
+    <textarea id="explainArea" placeholder="Begin your defense..."></textarea>
+    <div id="wordCounter">200 words remaining</div>
+  `;
+  actions.innerHTML = `<button id="secSubmit" class="danger">Submit Defense</button>`;
+  const area = document.getElementById('explainArea');
+  const counter = document.getElementById('wordCounter');
+  area.addEventListener('input', () => {
+    const words = area.value.trim().split(/\s+/).filter(Boolean).length;
+    // The counter never reaches zero — even if they type 10000 words
+    let remaining = Math.max(1, 200 - words);
+    if (words >= 200) {
+      // Move the goalposts: keep them 1 short, forever
+      remaining = 1;
+      counter.textContent = `1 word remaining. Just one more. We promise.`;
+    } else {
+      counter.textContent = `${remaining} words remaining`;
+    }
+  });
+  document.getElementById('secSubmit').addEventListener('click', () => {
+    playWomp();
+    toast("Defense rejected. Try again. Or don't.");
+  });
+});
+
+document.getElementById('secRun').addEventListener('click', () => {
+  document.getElementById('secOverlay').style.display = 'none';
+  playFootsteps();
+  toast("Too late. We already know.", 3500);
+});
+
+/* ============ Progressive Page Tilt ============ */
+const tiltMap = {
+  1:  0,
+  2:  1,
+  3:  2,
+  4: -3,
+  5:  4,
+  6:  5,
+  7:  6,
+  8:  8,
+  9: 12,
+  10: 12,
+  11: 15
+};
+const wrap = document.getElementById('signupWrap');
+function applyTilt(step) {
+  const deg = tiltMap[step] ?? 0;
+  wrap.classList.remove('spin');
+  void wrap.offsetWidth;
+  wrap.style.transform = `rotate(${deg}deg)`;
+}
+
+/* Login time-based tilt — drifts ±6deg over time while on login page */
+(function loginTimeTilt() {
+  const loginWrap = document.getElementById('login-form');
+  let deg = 0, dir = 1;
+  setInterval(() => {
+    if (!document.getElementById('pageLogin').classList.contains('active')) return;
+    deg += 0.15 * dir;
+    if (deg >  6) dir = -1;
+    if (deg < -3) dir =  1;
+    loginWrap.style.transform = `rotate(${deg.toFixed(2)}deg)`;
+  }, 2000);
+})();
+
+// Patch showStep to drive tilt
+const _origShowStep = showStep;
+showStep = function(n) {
+  _origShowStep(n);
+  applyTilt(n);
+};
+
+// On session-expired reset (Step 11 → Step 1): do a full 360 spin first
+const _origPrepFinal = prepFinal;
+prepFinal = function() {
+  _origPrepFinal();
+  // wrap the existing Restart click so the spin happens before reset
+  const fs = document.getElementById('finalStart');
+  const observer = new MutationObserver(() => {
+    if (fs.textContent.includes('Restart')) {
+      const oldHandler = fs.onclick;
+      fs.onclick = () => {
+        const cur = tiltMap[11];
+        wrap.style.transition = 'transform 1.6s ease-in-out';
+        wrap.style.transform = `rotate(${cur + 360}deg)`;
+        setTimeout(() => {
+          wrap.style.transition = 'none';
+          wrap.style.transform = 'rotate(0deg)';
+          void wrap.offsetWidth;
+          wrap.style.transition = '';
+          if (oldHandler) oldHandler();
+        }, 1700);
+      };
+      observer.disconnect();
+    }
+  });
+  observer.observe(fs, { childList: true, characterData: true, subtree: true });
+};
+
+// Apply initial tilt (step 1 = 0deg, but be explicit)
+applyTilt(1);
+
+/* ============================================================
+   ============ PREFILLED PLACEHOLDER-AS-VALUE ===============
+   ============================================================ */
+(function initPrefill() {
+  // Every text/password input (excluding file, checkbox, range, hidden, submit)
+  const SKIP_TYPES = new Set(['file','checkbox','radio','range','submit','button','image','reset','color']);
+
+  function setup(el) {
+    if (SKIP_TYPES.has(el.type)) return;
+    if (el.dataset.phInitDone) return;
+    el.dataset.phInitDone = '1';
+
+    // Derive the "placeholder value" — prefer placeholder attr, fall back to value
+    const phText = el.placeholder || el.value || '';
+    if (!phText) return;
+
+    el.dataset.phval = phText;
+
+    // Make password fields plain text so pre-fill is visible
+    if (el.type === 'password') el.type = 'text';
+
+    // Remove placeholder attr so it doesn't fight with the value
+    el.removeAttribute('placeholder');
+
+    // Pre-fill with the placeholder text as actual value
+    el.value = phText;
+
+    // On blur: if left empty, restore after 1.5 s
+    el.addEventListener('blur', () => {
+      if (el.value.trim() === '') {
+        setTimeout(() => {
+          if (el.value.trim() === '') {
+            el.value = el.dataset.phval;
+          }
+        }, 1500);
+      }
+    });
+  }
+
+  // Run on all current inputs
+  function setupAll() {
+    document.querySelectorAll('input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="range"])').forEach(setup);
+    // Also cover <select> answer field neighbour and wizard inputs with no type attr
+    document.querySelectorAll('input').forEach(setup);
+  }
+
+  setupAll();
+
+  // Also wire up wizard step inputs lazily as each step becomes visible
+  // (since they're already in the DOM, setupAll() covers them — but re-run on step change)
+  const _existingShowStep = showStep;
+  showStep = function(n) {
+    _existingShowStep(n);
+    setupAll();
+  };
+})();
+
+/* Check that none of the given IDs still hold their placeholder default */
+function checkNoPlaceholders(ids) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (el.dataset.phval && el.value === el.dataset.phval) {
+      toast("That's literally the placeholder text. Really?");
+      playWomp();
+      el.focus();
+      // Select all so they notice
+      el.select();
+      return false;
+    }
+  }
+  return true;
+}
+
+/* ============================================================
+   ============== SIGNUP PAGE MECHANICS ======================
+   ============================================================ */
+
+/* ---- Page routing ---- */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+// "click HERE" — looks clickable but does nothing
+['goSignup', 'goLoginBottom'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', (e) => e.preventDefault());
+});
+// faded page-name links — these actually navigate
+const goSignupFaded = document.getElementById('goSignupFaded');
+if (goSignupFaded) goSignupFaded.addEventListener('click', () => showPage('pageSignup'));
+['goLogin', 'goLoginFaded'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => showPage('pageLogin'));
+});
+
+const _suPhoneEl = document.getElementById('suPhone');
+if (_suPhoneEl) {
+(function(){
+/* ---- Phone number: digits only, after 6 randomly delete 2 ---- */
+const suPhone = document.getElementById('suPhone');
+let phoneAtePool = false;
+suPhone.addEventListener('input', () => {
+  // Strip non-digits but keep "+"
+  let v = suPhone.value.replace(/[^\d+]/g, '');
+  if (v.length > 6 && !phoneAtePool) {
+    phoneAtePool = true;
+    // Randomly delete 2 digits from the digit portion
+    const digits = v.replace(/\+/g, '');
+    const arr = digits.split('');
+    for (let i = 0; i < 2 && arr.length > 0; i++) {
+      arr.splice(Math.floor(Math.random()*arr.length), 1);
+    }
+    v = (v.startsWith('+') ? '+' : '') + arr.join('');
+    toast("We dropped 2 digits. We do that.");
+    // allow it to happen again later
+    setTimeout(() => phoneAtePool = false, 1500);
+  }
+  suPhone.value = v;
+});
+
+})();
+}
+if (document.getElementById('dobDay')) {
+/* ---- DOB Picker: only future dates, years 3000-3099 ---- */
+(function buildDOB() {
+  const day = document.getElementById('dobDay');
+  const month = document.getElementById('dobMonth');
+  const year = document.getElementById('dobYear');
+
+  day.innerHTML = '<option value="">Day</option>';
+  for (let d = 1; d <= 31; d++) day.innerHTML += `<option>${d}</option>`;
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  month.innerHTML = '<option value="">Month</option>';
+  monthNames.forEach((m, i) => month.innerHTML += `<option value="${i+1}">${m}</option>`);
+
+  year.innerHTML = '<option value="">Year</option>';
+  for (let y = 3000; y <= 3099; y++) year.innerHTML += `<option>${y}</option>`;
+
+  const msg = document.getElementById('dobMessage');
+  function check() {
+    const d = day.value, m = month.value, y = year.value;
+    if (!d || !m || !y) { msg.textContent = ''; return; }
+    const picked = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+    const now = new Date();
+    if (picked > now) {
+      msg.textContent = "You haven't been born yet. Please try again after your birth.";
+      playWomp();
+    } else {
+      msg.textContent = "Past dates are not selectable. Please pick something more... aspirational.";
+    }
+  }
+  [day, month, year].forEach(s => s.addEventListener('change', check));
+})();
+
+}
+if (document.getElementById('suPassword')) {
+/* ---- Impossible password rules ---- */
+const suPassword = document.getElementById('suPassword');
+const rulesList = document.getElementById('rulesList');
+const strengthMeter = document.getElementById('strengthMeter');
+const suUsername = document.getElementById('suUsername');
+
+const allRules = [
+  { id: 'emoji', text: 'Must include an emoji' },
+  { id: 'noEmoji', text: 'Must NOT include an emoji' },
+  { id: 'len10', text: 'Must be exactly 10 characters' },
+  { id: 'len11', text: 'Must be exactly 11 characters' },
+  { id: 'len12', text: 'Must be exactly 12 characters (we changed our mind)' },
+  { id: 'hasNum', text: 'Must contain a number' },
+  { id: 'noNum', text: 'Numbers are not allowed' },
+  { id: 'backwards', text: 'Must spell a word backwards' },
+  { id: 'noNameLetters', text: 'Must not contain any letter found in your own name' },
+  { id: 'upper', text: 'Must contain uppercase letters' },
+  { id: 'noUpper', text: 'Uppercase is forbidden here' },
+  { id: 'palindrome', text: 'Must be a palindrome' },
+  { id: 'startConsonant', text: 'Must start with a consonant' },
+  { id: 'startVowel', text: 'Actually it must start with a vowel' },
+  { id: 'noRepeats', text: 'No character may appear twice' },
+  { id: 'manyRepeats', text: 'Must repeat at least one character 4 times' }
+];
+
+function ruleSatisfied(rule, pwd) {
+  const name = (suUsername.value || '').toLowerCase();
+  const emojiRe = /[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{2600}-\u{27BF}]/u;
+  switch (rule.id) {
+    case 'emoji': return emojiRe.test(pwd);
+    case 'noEmoji': return !emojiRe.test(pwd);
+    case 'len10': return pwd.length === 10;
+    case 'len11': return pwd.length === 11;
+    case 'len12': return pwd.length === 12;
+    case 'hasNum': return /\d/.test(pwd);
+    case 'noNum': return !/\d/.test(pwd);
+    case 'backwards': return pwd.length >= 4 && /^[a-z]+$/i.test(pwd); // we lie: never satisfied via passive check
+    case 'noNameLetters': return name.length > 0 && ![...pwd.toLowerCase()].some(ch => name.includes(ch));
+    case 'upper': return /[A-Z]/.test(pwd);
+    case 'noUpper': return !/[A-Z]/.test(pwd);
+    case 'palindrome': return pwd.length >= 3 && pwd === [...pwd].reverse().join('');
+    case 'startConsonant': return /^[bcdfghjklmnpqrstvwxyz]/i.test(pwd);
+    case 'startVowel': return /^[aeiou]/i.test(pwd);
+    case 'noRepeats': return new Set(pwd).size === pwd.length && pwd.length > 0;
+    case 'manyRepeats': {
+      const counts = {};
+      for (const c of pwd) counts[c] = (counts[c]||0)+1;
+      return Object.values(counts).some(n => n >= 4);
+    }
+  }
+  return false;
+}
+
+let activeRules = [allRules[0], allRules[2], allRules[5], allRules[7], allRules[8]];
+
+function pickNewRule(replaceId) {
+  // Pick a rule that's intentionally contradicting the just-satisfied one
+  const contradictions = {
+    emoji: 'noEmoji', noEmoji: 'emoji',
+    len10: 'len11', len11: 'len12', len12: 'len10',
+    hasNum: 'noNum', noNum: 'hasNum',
+    upper: 'noUpper', noUpper: 'upper',
+    startConsonant: 'startVowel', startVowel: 'startConsonant',
+    noRepeats: 'manyRepeats', manyRepeats: 'noRepeats'
+  };
+  if (contradictions[replaceId]) {
+    return allRules.find(r => r.id === contradictions[replaceId]);
+  }
+  // Otherwise random from unused
+  const used = new Set(activeRules.map(r => r.id));
+  const pool = allRules.filter(r => !used.has(r.id));
+  return pool[Math.floor(Math.random() * pool.length)] || allRules[Math.floor(Math.random()*allRules.length)];
+}
+
+function renderRules() {
+  rulesList.innerHTML = '';
+  activeRules.forEach(r => {
+    const li = document.createElement('li');
+    li.textContent = '• ' + r.text;
+    li.dataset.rid = r.id;
+    rulesList.appendChild(li);
+  });
+}
+renderRules();
+
+suPassword.addEventListener('input', () => {
+  const pwd = suPassword.value;
+  let changed = false;
+  activeRules = activeRules.map(r => {
+    const li = rulesList.querySelector(`[data-rid="${r.id}"]`);
+    if (ruleSatisfied(r, pwd)) {
+      if (li) li.classList.add('good');
+      // Swap this rule out for a contradiction after a beat
+      const replacement = pickNewRule(r.id);
+      changed = true;
+      return replacement || r;
+    } else {
+      if (li) li.classList.remove('good');
+      if (li) li.classList.add('bad');
+      return r;
+    }
+  });
+  if (changed) {
+    setTimeout(() => {
+      renderRules();
+      playWomp();
+    }, 350);
+  }
+  // Strength meter always WEAK 💀
+  const variants = ['WEAK 💀', 'STILL WEAK 💀', 'EXTREMELY WEAK 💀', 'WEAKER THAN BEFORE 💀', 'TRAGICALLY WEAK 💀'];
+  strengthMeter.textContent = variants[Math.min(variants.length-1, Math.floor(pwd.length / 4))];
+});
+
+
+}
+if (document.getElementById('suConfirm')) {
+/* ---- Confirm Password that LIES ---- */
+const suConfirm = document.getElementById('suConfirm');
+const confirmStatus = document.getElementById('confirmStatus');
+let confirmAttempts = 0;
+suConfirm.addEventListener('input', () => {
+  if (suConfirm.value.length === 0) { confirmStatus.textContent = ''; return; }
+  confirmAttempts++;
+  if (suPassword.value === suConfirm.value && confirmAttempts >= 5) {
+    confirmStatus.style.color = '#39ff14';
+    confirmStatus.textContent = "OK fine they match. We just didn't want to admit it.";
+  } else {
+    confirmStatus.style.color = '#ff5555';
+    confirmStatus.textContent = "Passwords do not match.";
+  }
+});
+
+
+}
+if (document.getElementById('suUsername')) {
+/* ---- Username availability: always taken ---- */
+const usernameStatus = document.getElementById('usernameStatus');
+let usernameTimer = null;
+let usernameAttempts = 0;
+suUsername.addEventListener('input', () => {
+  if (usernameTimer) clearTimeout(usernameTimer);
+  const v = suUsername.value.trim();
+  if (!v) { usernameStatus.textContent = ''; usernameStatus.classList.remove('checking'); return; }
+  usernameStatus.classList.add('checking');
+  usernameStatus.textContent = '⌛ Checking availability...';
+  usernameTimer = setTimeout(() => {
+    usernameAttempts++;
+    usernameStatus.classList.remove('checking');
+    if (usernameAttempts >= 5) {
+      usernameStatus.innerHTML = '❌ Already taken. Might we suggest: <strong style="color:#39ff14;">User_492847261_Final_REAL</strong>?';
+    } else {
+      usernameStatus.textContent = '❌ Already taken';
+    }
+  }, 2000);
+});
+
+
+}
+/* ---- Profile picture: pixelate and "share it" ---- */
+{
+const suPic = document.getElementById('suPic');
+const picPreview = document.getElementById('picPreview');
+const picCanvas = document.getElementById('picCanvas');
+if (suPic && picPreview && picCanvas) suPic.addEventListener('change', () => {
+  const file = suPic.files && suPic.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = picCanvas;
+      const ctx2 = c.getContext('2d');
+      ctx2.imageSmoothingEnabled = false;
+      ctx2.clearRect(0, 0, c.width, c.height);
+      ctx2.drawImage(img, 0, 0, c.width, c.height);
+      const d = ctx2.getImageData(0, 0, c.width, c.height);
+      for (let i = 0; i < d.data.length; i += 4) {
+        d.data[i]   = Math.min(255, d.data[i]   + 50);
+        d.data[i+1] = Math.max(0,  d.data[i+1] - 30);
+        d.data[i+2] = Math.min(255, d.data[i+2] + 80);
+      }
+      ctx2.putImageData(d, 0, 0);
+      // Scale up display via CSS, but draw at native 40x40 to keep it chunky
+      c.style.width = '160px';
+      c.style.height = '160px';
+      picPreview.style.display = 'block';
+      toast("We've already shared it.", 3000);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+} // end profile picture guard
 
 </script>
 </body>
