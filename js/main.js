@@ -52,10 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
     buttons.forEach(b => {
         const btn = b.element;
         if (btn === triggerBtn) {
+            btn.style.backgroundColor = '#00ff88'; // ← TEST: marks the trigger button
+            btn.style.animation = 'none';
             btn.addEventListener('click', startLoadingSequence);
         } else {
             const soundFile = SOUND_EFFECTS[Math.floor(Math.random() * SOUND_EFFECTS.length)];
             const audio = new Audio(`Sound effects/${soundFile}`);
+            audio.volume = 0.7;
             btn.addEventListener('click', () => {
                 audio.currentTime = 0;
                 audio.play().catch(e => console.error(e));

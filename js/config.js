@@ -31,8 +31,10 @@ export const TIMINGS = {
     // Phase 6: Bar 50% -> 85%
     stage6_finalForward: 6000,
     // Phase 7: Vertical drop line grows from 85% point downward
-    stage7_lineDown: 3000,
-    // Phase 8: 3-second pause with L-shape visible
+    stage7_lineDown: 1500,
+    // Phase 8: Flower slides down alongside the line
+    stage8_slideDown: 1500,
+    // Phase 9: 3-second pause before jumpscare
     pauseBeforeJumpscare: 3000,
     // Phase 9: Jumpscare fade-in
     jumpscareFadeIn: 100,

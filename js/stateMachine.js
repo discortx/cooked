@@ -54,14 +54,18 @@ export class StateMachine {
     phase7() {
         // Phase 7: Vertical drop line grows from 85% point — L-shape forms
         console.log('[P7] Line turns down');
-        this.anim.turnLineDown(() => this.phase8());
+        this.anim.turnLineDown();
+        this.phase8();
     }
 
     phase8() {
-        // Phase 8: 3-second pause — L-shape and flower both visible, flower slides to bottom
+        // Phase 8: Flower slides to bottom alongside the line
         console.log('[P8] Flower slides to bottom');
         this.anim.slideFlowerToBottom(() => {
-            this.phase9();
+            // After arriving at bottom, 3-second pause
+            setTimeout(() => {
+                this.phase9();
+            }, TIMINGS.pauseBeforeJumpscare);
         });
     }
 

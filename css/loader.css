@@ -19,6 +19,7 @@
     cursor: pointer;
     width: 100%;
     height: 100%;
+    border-radius: 9999px;
 }
 
 @keyframes flash {
@@ -27,14 +28,13 @@
 }
 
 #progress-container {
+    position: fixed;
+    inset: 0;
     width: 100vw;
-    height: 500px;
+    height: 100vh;
     background-color: transparent;
-    position: relative;
     overflow: visible;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    pointer-events: none;
 }
 
 #progress-svg {
@@ -44,34 +44,34 @@
 }
 
 /* Horizontal progress bar — bar at y=900 in 0-1000 viewBox (lower on screen) */
+/* dasharray/dashoffset managed entirely by JS via getTotalLength() to avoid px/unit mismatch */
 #progress-path {
     fill: none;
     stroke: black;
     stroke-width: 20px;
     stroke-linecap: butt;
-    stroke-dasharray: 1000 2000;
+    vector-effect: non-scaling-stroke;
+    /* Start invisible — JS sets dasharray/dashoffset to reveal */
+    stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
-    transition: stroke-dashoffset 10s linear, opacity 0.5s linear;
-    d: path("M 0 900 L 1000 900");
 }
 
 /* Vertical drop line — grows down from (850, 900); invisible until JS triggers it */
+/* dasharray/dashoffset managed entirely by JS via getTotalLength() */
 #drop-path {
     fill: none;
     stroke: black;
     stroke-width: 20px;
     stroke-linecap: butt;
     vector-effect: non-scaling-stroke;
-    /* 1100 SVG units = full length of M 850 900 L 850 2000 */
-    stroke-dasharray: 1100;
-    stroke-dashoffset: 1100;
-    /* transition applied by JS when drawing starts */
+    /* Invisible until phase 7 — JS will set dasharray/dashoffset */
+    opacity: 0;
 }
 
 /* Flower: nested <svg> inside #progress-svg — positioned via x/y SVG attributes.
-   Only opacity is managed here (JS fades it in). */
+   Opacity and transitions managed entirely by JS. */
 #wilted-flower {
-    transition: opacity 0.4s ease;
+    /* transitions set by JS */
 }
 
 /* Jumpscare video */
