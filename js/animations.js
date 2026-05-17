@@ -72,11 +72,11 @@ export class Animations {
         const tipY   = this.barY;                            // bar Y pixel
 
         // 2. The flower SVG internal stem base is at svg-local (56, 122)
-        //    in a 128×128 viewBox rendered at 260×260 px
-        //    → stemBaseX_local = (56/128) * 260 = 113.75 px from left of container
-        //    → stemBaseY_local = (122/128) * 260 = 247.8 px from top of container
-        const stemLocalX = (56 / 128) * 260;    // ≈ 113
-        const stemLocalY = (122 / 128) * 260;   // ≈ 248
+        //    in a 128×128 viewBox rendered at 350×350 px
+        //    → stemBaseX_local = (56/128) * 350 = 153.125 px from left of container
+        //    → stemBaseY_local = (122/128) * 350 = 333.6 px from top of container
+        const stemLocalX = (56 / 128) * 350;    // ≈ 153.1
+        const stemLocalY = (122 / 128) * 350;   // ≈ 333.6
 
         // 3. Position container so stem base sits on bar tip
         this.flowerContainer.style.left = `${tipX - stemLocalX}px`;

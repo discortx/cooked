@@ -68,8 +68,8 @@
 
 #flower-container {
     position: fixed;
-    width: 260px;
-    height: 260px;
+    width: 350px;
+    height: 350px;
     pointer-events: none;
     z-index: 20;
     opacity: 0;
