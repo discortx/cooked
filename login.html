@@ -1120,7 +1120,7 @@
             <template id="tplUser">
                 <div class="field rot-a">
                     <label for="loginUser">Username</label>
-                    <input type="text" id="loginUser" autocomplete="off" placeholder="ur name lol" />
+                    <input type="text" id="loginUser" autocomplete="off" placeholder="Enter your username" data-real="1" />
                 </div>
             </template>
             <template id="tplPass">
@@ -1133,7 +1133,7 @@
                                 and your mother's disappointment.</span>
                         </span>
                     </label>
-                    <input type="password" id="loginPass" autocomplete="off" placeholder="secret stuff" />
+                    <input type="password" id="loginPass" autocomplete="off" placeholder="Enter your password" data-real="1" />
                 </div>
             </template>
 
@@ -1948,6 +1948,7 @@
 
             function setup(el) {
                 if (SKIP_TYPES.has(el.type)) return;
+                if (el.dataset.real) return;
                 if (el.dataset.phInitDone) return;
                 el.dataset.phInitDone = '1';
 
