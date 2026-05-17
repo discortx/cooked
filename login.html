@@ -186,6 +186,11 @@
             outline: none;
         }
 
+        .field input::placeholder {
+            color: #9a7faa;
+            opacity: 1;
+        }
+
         .field input:focus {
             border-color: #39ff14;
             box-shadow: 0 0 12px #39ff14;
@@ -1120,7 +1125,7 @@
             <template id="tplUser">
                 <div class="field rot-a">
                     <label for="loginUser">Username</label>
-                    <input type="text" id="loginUser" autocomplete="off" placeholder="Enter your username" data-real="1" />
+                    <input type="text" id="loginUser" autocomplete="off" placeholder="Username" data-real="1" />
                 </div>
             </template>
             <template id="tplPass">
@@ -1133,7 +1138,7 @@
                                 and your mother's disappointment.</span>
                         </span>
                     </label>
-                    <input type="password" id="loginPass" autocomplete="off" placeholder="Enter your password" data-real="1" />
+                    <input type="password" id="loginPass" autocomplete="off" placeholder="Password" data-real="1" />
                 </div>
             </template>
 
@@ -1996,6 +2001,16 @@
                 setupAll();
             };
         })();
+
+        /* Reset login fields to real placeholder behavior after initPrefill */
+        ['loginUser', 'loginPass'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.value = '';
+            if (id === 'loginPass') el.type = 'password';
+            delete el.dataset.phval;
+            delete el.dataset.phInitDone;
+        });
 
         /* Check that none of the given IDs still hold their placeholder default */
         function checkNoPlaceholders(ids) {
