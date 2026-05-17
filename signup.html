@@ -1117,63 +1117,141 @@
     <div class="badge">🔒 TOTALLY SECURE LOGIN™</div>
     <div class="rand-spin" id="randSpin"></div>
 
-    <!-- ============== LOGIN PAGE ============== -->
-    <div class="page active" id="pageLogin">
-        <div class="wrap" id="login-form">
-            <div id="loginFlash"></div>
-            <h1>Welcome Back?</h1>
-            <div class="subtitle gothic">Please verify thy humanity below</div>
+    
 
-            <div id="fieldSlot1"></div>
-            <div id="fieldSlot2"></div>
+    <!-- ============== SIGNUP PAGE ============== -->
+    <div class="page active" id="pageSignup">
+        <a class="top-nav" id="goLogin">Already have an account? Login →</a>
 
-            <template id="tplUser">
-                <div class="field rot-a">
-                    <label for="loginUser">Username</label>
-                    <input type="text" id="loginUser" autocomplete="off" placeholder="ur name lol" />
+        <div class="wrap" id="signupWrap">
+            <h1>Create Account</h1>
+            <div class="subtitle gothic">This won't take long. (It will take long.)</div>
+
+            <div class="wizard">
+                <h2 class="gothic">The 11-Step Sign Up</h2>
+                <div class="step-indicator">Step <span id="stepNum">1</span> of 11</div>
+
+                <div class="step active" data-step="1">
+                    <h3>Step 1 — Choose a Username</h3>
+                    <p>Pick something unique. It's definitely available.</p>
+                    <input type="text" id="wizUsername" placeholder="pick something nobody else has" />
+                    <div id="usernameStatus"></div>
+                    <button class="nav" data-next>Next</button>
                 </div>
-            </template>
-            <template id="tplPass">
-                <div class="field rot-b">
-                    <label for="loginPass">
-                        Password
+
+                <div class="step" data-step="2">
+                    <h3>Step 2 — Choose a Password</h3>
+                    <p>Make it strong.
                         <span class="tooltip-host">
                             <span class="info-i">i</span>
-                            <span class="tooltip">Must be 8–9 characters, include a prime number spelled out in Latin,
-                                and your mother's disappointment.</span>
+                            <span class="tooltip">Must be 8–9 chars, include a prime number in Latin, and your mother's
+                                disappointment.</span>
                         </span>
-                    </label>
-                    <input type="password" id="loginPass" autocomplete="off" placeholder="secret stuff" />
+                    </p>
+                    <input type="text" id="wizPassword" placeholder="make it weird" />
+                    <button class="nav" data-next>Next</button>
                 </div>
-            </template>
 
-            <div class="footnote">* fields may or may not be in the correct order. we don't know either.</div>
+                <div class="step" data-step="3">
+                    <h3>Step 3 — Confirm Password</h3>
+                    <p>Type it again. Exactly the same. We believe in you.</p>
+                    <input type="text" id="wizConfirm" placeholder="type it AGAIN" />
+                    <div id="wizConfirmStatus"
+                        style="margin-top:6px;color:#ff5555;font-weight:700;min-height:18px;font-size:0.9rem;"></div>
+                    <button class="nav" data-next>Next</button>
+                </div>
 
-            <div class="robot-row rot-c">
-                <input type="checkbox" id="robotChk" />
-                <label for="robotChk" id="robotLbl">I am not a robot.</label>
-            </div>
+                <div class="step" data-step="4">
+                    <h3>Step 4 — Spirit Animal</h3>
+                    <p>What is your spirit animal? <em>(required)</em></p>
+                    <input type="text" id="spiritAnimal" placeholder="e.g. confused raccoon" />
+                    <button class="nav" data-next>Next</button>
+                </div>
 
-            <div class="remember-row rot-d">
-                <input type="checkbox" id="rememberChk" />
-                <label for="rememberChk">Remember Me</label>
-            </div>
+                <div class="step" data-step="5">
+                    <h3>Step 5 — CAPTCHA</h3>
+                    <p>Select all images that represent <strong>existential dread</strong>.</p>
+                    <div class="captcha-grid" id="captchaGrid">
+                        <div class="captcha-cell">[image]</div>
+                        <div class="captcha-cell">[image]</div>
+                        <div class="captcha-cell">[image]</div>
+                    </div>
+                    <button class="nav" data-next>Verify</button>
+                </div>
 
-            <a class="forgot" id="forgotLink">Forgot Password?</a>
+                <div class="step" data-step="6">
+                    <h3>Step 6 — Toaster Check</h3>
+                    <p>Confirm you are not a toaster:</p>
+                    <button class="nav yes" data-next>Yes</button>
+                    <button class="nav alsoyes" data-next>Also Yes</button>
+                </div>
 
-            <div class="submit-host" id="submitHost">
-                <button id="submitBtn" type="button">LOG IN</button>
+                <div class="step" data-step="7">
+                    <h3>Step 7 — Frustration Level</h3>
+                    <p>Rate your current frustration:</p>
+                    <div class="slider-row">
+                        <input type="range" id="frustSlider" min="0" max="100" value="50" />
+                        <div class="slider-labels">
+                            <span>Mild Annoyance</span>
+                            <span>Screaming Into Void</span>
+                        </div>
+                        <div id="slideOut">50%</div>
+                    </div>
+                    <button class="nav" data-next>Next</button>
+                </div>
+
+                <div class="step" data-step="8">
+                    <h3>Step 8 — Draw Your Password</h3>
+                    <p>Please draw your password below. (Clears every 2 seconds. Good luck.)</p>
+                    <canvas id="drawPad" width="400" height="180"></canvas>
+                    <div class="canvas-note">(this canvas is broken on purpose. enjoy.)</div>
+                    <button class="nav" data-next>Next</button>
+                </div>
+
+                <div class="step" data-step="9">
+                    <h3>Step 9 — Secret Question</h3>
+                    <p>Choose a question only you can answer.</p>
+                    <select id="suSecret"
+                        style="width:100%;padding:10px;background:#fffbe7;color:#1a0033;border:3px solid #ff6600;border-radius:6px;font-family:'Comic Neue',cursive;margin-bottom:8px;">
+                        <option value="">-- Choose your trauma --</option>
+                        <option>What is the name of your first regret?</option>
+                        <option>What sound does your anxiety make?</option>
+                        <option>What is the WiFi password of your childhood home?</option>
+                        <option>What were you doing on the 3rd Tuesday of last month at 2:47 PM?</option>
+                        <option>How many windows are in your hometown?</option>
+                        <option>Which season betrayed you first?</option>
+                    </select>
+                    <input type="text" id="suSecretAns" placeholder="answer (we will judge it)" style="width:100%;" />
+                    <button class="nav" data-next>Next</button>
+                </div>
+
+                <div class="step" data-step="10">
+                    <h3>Step 10 — Creating Account...</h3>
+                    <p>Please wait while we process everything:</p>
+                    <div class="bar-shell">
+                        <div class="bar-fill" id="fakeBar">0%</div>
+                    </div>
+                    <button class="nav" id="fakeStart" data-next-disabled>Begin</button>
+                </div>
+
+                <div class="step" data-step="11">
+                    <h3>Step 11 — Almost Done!</h3>
+                    <p>Finalizing your account...</p>
+                    <div class="bar-shell">
+                        <div class="bar-fill" id="finalBar">0%</div>
+                    </div>
+                    <div id="finalMsg"></div>
+                    <button class="nav" id="finalStart">Finish</button>
+                </div>
             </div>
 
             <div class="bottom-nav">
-                Don't have an account? Please <a href="signup.html" class="nav-link" id="goSignup">click HERE</a> to GO to the <span
-                    class="nav-faded" id="goSignupFaded">signup page</span>
+                Already have an account? Please <a href="login.html" class="nav-link" id="goLoginBottom">click HERE</a> to GO to the
+                <span class="nav-faded" id="goLoginFaded">login page</span>
             </div>
         </div>
     </div>
-    <!-- ============== END LOGIN PAGE ============== -->
-
-    
+    <!-- ============== END SIGNUP PAGE ============== -->
 
     <!-- Signup submit progress overlay -->
     <div class="save-overlay" id="saveOverlay">
