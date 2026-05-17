@@ -1,0 +1,490 @@
+================================================================================
+  LOADING PAGE — FINAL IMPLEMENTATION PLAN
+  Target: responsive, tested baseline at 1920×1080
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 0 — CONFIRMED BEHAVIOUR (READ BEFORE TOUCHING ANY FILE)
+────────────────────────────────────────────────────────────────────────────────
+
+The animation is a single continuous "growing line" with these exact phases:
+
+  P1  Line grows  0 % → 90 %   (false hope, ~12 s)
+  P2  Line shrinks 90 % → 1 %  (cruel reversal, ~5 s)
+  P3  Line grows  1 % → 95 %   (second hope, ~10 s)
+  P4  Line shrinks 95 % → 50 % (tease, ~4 s)
+  P5  Line PAUSES at 50 %. Flower draws in at the bar tip.  (~6.5 s)
+  P6  Line resumes from 50 % → 85 %, passing UNDER flower.  (~6 s)
+      Flower is layered ABOVE the line the entire time.
+      The line tip "touches the flower stem" as it passes through.
+  P7  At 85 % the line turns 90° and grows DOWNWARD off-screen. (~1.5 s)
+      Both the horizontal line and the vertical drop stay visible.
+      The flower stays at the 50 % position, visible the entire time.
+  P8  3-second pause.
+  P9  Jumpscare video fades in → on end → redirect to chaos-login.html.
+
+Phase 8 (slideFlowerToBottom) from the original plan is REMOVED entirely.
+The flower never moves after it is drawn.
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 1 — ROOT CAUSES OF CURRENT BUGS
+────────────────────────────────────────────────────────────────────────────────
+
+BUG A — Bar wraps / doesn't reach 90 %
+  Cause: The outer #progress-svg uses preserveAspectRatio="none" on a
+  1000×1000 viewBox. This applies DIFFERENT X and Y scale factors to fill
+  any non-square viewport (e.g. 1920×1080 → scaleX=1.92, scaleY=1.08).
+  vector-effect="non-scaling-stroke" forces stroke rendering into SCREEN PIXEL
+  space, which means stroke-dasharray / stroke-dashoffset are consumed as
+  screen pixels. But getTotalLength() returns SVG USER UNITS (~1000).
+  Feeding user-unit lengths into a pixel-space dash system causes the bar to
+  misrepresent every percentage and visually wrap or stall.
+
+BUG B — Flower is distorted (squished / stretched)
+  Cause: The <svg id="wilted-flower"> is nested inside the same
+  preserveAspectRatio="none" outer SVG. Its width="650" height="650" in SVG
+  user units renders as 650×1.92 = 1248 px wide but 650×1.08 = 702 px tall.
+  Different X/Y stretch = distorted shape.
+
+BUG C — Flower does not start at the bar tip
+  Cause: The flower x="216" y="200" placement was calculated assuming a
+  uniform 1000-unit coordinate space. The non-uniform scaling breaks the
+  alignment so the flower and bar tip land at different screen positions.
+
+BUG D — L-shape not formed correctly
+  Cause: Downstream of Bug A. If the horizontal bar animates incorrectly,
+  the #drop-path anchor point M 850 820 is in the wrong visual position.
+  The vertical segment's length in user units (1180) also doesn't match
+  screen pixels, so it may not reach the bottom.
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 2 — ARCHITECTURE DECISIONS
+────────────────────────────────────────────────────────────────────────────────
+
+DECISION 1 — Progress bar: CSS div, not SVG path
+  Use <div id="progress-bar"> with CSS width transitions.
+  width: 0% → 90% → 1% → 95% → 50% → 85%
+  This is immune to all SVG coordinate system issues. Percentage widths are
+  always relative to the viewport. JS reads the bar's pixel tip position via
+  getBoundingClientRect() whenever alignment to other elements is needed.
+
+DECISION 2 — Flower: position-fixed overlay div, not nested SVG
+  Move <svg id="wilted-flower"> into its own <div id="flower-container">
+  that is position: fixed; pointer-events: none; z-index above the line.
+  Position is set by JS in screen pixels after reading the bar tip coords.
+  The flower SVG uses preserveAspectRatio="xMidYMid meet" with a square
+  pixel size → zero distortion possible.
+
+DECISION 3 — L-shape lines: one SVG with a JS-computed pixel viewBox
+  Keep #progress-svg for drawing the visual line and vertical drop only.
+  On page load, JS reads window.innerWidth / window.innerHeight and sets:
+    viewBox="0 0 {W} {H}"   (no preserveAspectRatio attribute at all)
+    width="100%"  height="100%"
+  All path coordinates are then real screen pixels. getTotalLength() returns
+  real pixel lengths. stroke-dasharray/strokeDashoffset set via setAttribute
+  are also in real pixels. The mismatch is eliminated.
+
+  The div progress bar is the visual indicator of percentage; the SVG line
+  is the decorative stroke drawn on top (same Y, same width, exact overlap).
+  OR — simpler — skip the SVG progress line and use the div border-bottom as
+  the visible line, and add the SVG only for the vertical drop segment.
+  RECOMMENDED: keep SVG for both (cleaner L-shape), but re-anchor it to
+  pixel space as described above.
+
+DECISION 4 — Responsive sizing
+  All coordinates derived from window.innerWidth (W) and window.innerHeight (H)
+  read once at start (after DOMContentLoaded). Key values:
+    barY      = H * 0.78          (bar sits at 78 % down the screen)
+    tipAt50   = W * 0.50          (bar tip when at 50 %)
+    tipAt85   = W * 0.85          (corner of the L)
+    dropEnd   = H + 300           (vertical line runs past the bottom edge)
+  All are recalculated if the window is resized (resize event listener).
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 3 — FILE-BY-FILE CHANGES
+────────────────────────────────────────────────────────────────────────────────
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3A — index.html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMOVE:
+  - The <path id="progress-path"> element from inside #progress-svg
+  - The entire nested <svg id="wilted-flower"> block from inside #progress-svg
+  - preserveAspectRatio="none" from #progress-svg
+  - viewBox="0 0 1000 1000" from #progress-svg (JS will set this at runtime)
+
+ADD:
+  - <div id="progress-bar"></div>  — placed BEFORE #loading-screen or inside it,
+    absolutely positioned, same visual Y as the SVG line.
+
+  - <div id="flower-container">
+      <svg id="wilted-flower" ...> (same paths, same fill colors) </svg>
+    </div>
+    Place this div as a direct child of <body>, after #loading-screen.
+
+KEEP (unchanged inside #progress-svg):
+  - <path id="drop-path"> — vertical L segment
+  - <circle id="corner-dot"> — dot at the bend
+  Remove all hardcoded SVG attributes (x, y, width, height) from #drop-path
+  and #corner-dot; JS will set the correct d= and cx/cy at runtime.
+
+KEEP (unchanged):
+  - #jumpscare-video element
+  - All <script> and <link> tags
+
+Result: #progress-svg contains ONLY #drop-path and #corner-dot.
+The horizontal bar is the <div>. The flower is a separate fixed div.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3B — css/loader.css   (full rewrite of affected rules)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMOVE:
+  - All rules targeting #progress-path (SVG bar path, now replaced by div)
+  - #drop-path opacity:0 initial state (JS will manage this)
+  - #wilted-flower rule (flower is no longer inside SVG)
+
+ADD / REPLACE:
+
+  /* ── Progress bar div ── */
+  #progress-bar {
+    position: fixed;
+    left: 0;
+    top: 78vh;                /* matches barY = H * 0.78 */
+    width: 0%;
+    height: 20px;             /* matches stroke-width: 20 on SVG */
+    background-color: black;
+    transform-origin: left center;
+    z-index: 10;
+    /* transitions applied by JS per phase, not here */
+  }
+
+  /* ── SVG overlay (drop line only) ── */
+  #progress-container {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9;               /* below flower, above content */
+  }
+
+  #progress-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  #drop-path {
+    fill: none;
+    stroke: black;
+    stroke-width: 20;
+    stroke-linecap: butt;
+    /* NO vector-effect — path coords are already in pixels */
+    opacity: 0;               /* JS sets to 1 in phase 7 */
+  }
+
+  #corner-dot {
+    fill: black;
+    opacity: 0;               /* JS sets to 1 in phase 7 */
+  }
+
+  /* ── Flower container ── */
+  #flower-container {
+    position: fixed;
+    width: 260px;             /* square — no distortion */
+    height: 260px;
+    pointer-events: none;
+    z-index: 20;              /* above progress bar div and SVG */
+    opacity: 0;               /* JS controls visibility */
+    /* left and top set by JS in pixels */
+  }
+
+  #wilted-flower {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Start screen (unchanged) ── */
+  #start-screen { ... }       /* keep as-is */
+  .grid-btn { ... }           /* keep as-is */
+  @keyframes flash { ... }    /* keep as-is */
+
+  /* ── Jumpscare (unchanged) ── */
+  #jumpscare-video { ... }    /* keep as-is */
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3C — js/config.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMOVE:
+  - stage8_slideDown (phase 8 is deleted)
+  - dropLength (was hardcoded SVG units; now computed from window.innerHeight)
+
+KEEP all other TIMINGS unchanged.
+
+ADD:
+  barYFraction: 0.78,   // barY = window.innerHeight * this
+  barThickness: 20,     // px — must match CSS height and SVG stroke-width
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3D — js/animations.js  (targeted rewrites of 4 methods)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  constructor()
+  ─────────────
+  Add references:
+    this.barDiv       = document.getElementById('progress-bar')
+    this.flowerContainer = document.getElementById('flower-container')
+    this.progressSvg  = document.getElementById('progress-svg')
+
+  Remove references to this.progressPath (no longer exists as SVG path).
+
+  Compute and store screen geometry once:
+    this.W    = window.innerWidth
+    this.H    = window.innerHeight
+    this.barY = Math.round(this.H * TIMINGS.barYFraction)
+
+  Set SVG viewBox to pixel space:
+    this.progressSvg.setAttribute('viewBox', `0 0 ${this.W} ${this.H}`)
+
+  Set drop-path d attribute using pixel coords:
+    const x85 = Math.round(this.W * 0.85)
+    this.dropPath.setAttribute('d', `M ${x85} ${this.barY} L ${x85} ${this.H + 300}`)
+
+  Set corner-dot position:
+    this.cornerDot.setAttribute('cx', x85)
+    this.cornerDot.setAttribute('cy', this.barY)
+
+  Add window resize listener that re-runs the above geometry calculations
+  and updates SVG viewBox + path d attributes.
+
+
+  _initPaths()
+  ─────────────
+  DELETE this method entirely — it was only needed for the SVG bar path.
+
+
+  setProgress(percent, duration)
+  ───────────────────────────────
+  REWRITE:
+    this.barDiv.style.transition = `width ${duration}ms linear`
+    this.barDiv.style.width      = `${percent}%`
+
+
+  showProgressBar()
+  ──────────────────
+  REWRITE:
+    this.barDiv.style.transition = 'none'
+    this.barDiv.style.width      = '50%'
+    // Force reflow then allow transitions again:
+    void this.barDiv.offsetWidth
+
+
+  hideProgressBar()
+  ──────────────────
+  DELETE — no longer needed (div is always visible once set).
+
+
+  drawFlower(onComplete)
+  ───────────────────────
+  KEEP the stroke-dashoffset draw-in technique entirely — it works correctly.
+
+  CHANGE only the positioning setup at the top of the method:
+
+    // 1. Compute flower position from bar tip at 50 %
+    const tipX   = Math.round(this.W * 0.50)           // bar tip pixel X
+    const tipY   = this.barY                            // bar Y pixel
+
+    // 2. The flower SVG internal stem base is at svg-local (56, 122)
+    //    in a 128×128 viewBox rendered at 260×260 px
+    //    → stemBaseX_local = (56/128) * 260 = 113.75 px from left of container
+    //    → stemBaseY_local = (122/128) * 260 = 247.8 px from top of container
+    const stemLocalX = (56 / 128) * 260    // ≈ 113
+    const stemLocalY = (122 / 128) * 260   // ≈ 248
+
+    // 3. Position container so stem base sits on bar tip
+    this.flowerContainer.style.left = `${tipX - stemLocalX}px`
+    this.flowerContainer.style.top  = `${tipY - stemLocalY}px`
+
+  NOTE: The rotation transform="rotate(-8 56 122)" inside the SVG shifts the
+  stem base slightly. After testing, fine-tune stemLocalX/stemLocalY offsets
+  by ±10 px if the alignment is off. The above values are the starting point.
+
+  The rest of drawFlower() (ORDER loop, stroke animation, fill fade, petal
+  fall) is UNCHANGED.
+
+
+  continueAfterFlower()
+  ──────────────────────
+  REWRITE:
+    this.barDiv.style.transition = 'none'
+    this.barDiv.style.width      = '50%'
+    void this.barDiv.offsetWidth   // flush
+
+
+  turnLineDown(onComplete)
+  ─────────────────────────
+  KEEP the overall approach (stroke-dashoffset on #drop-path) but:
+
+  REMOVE all manual dasharray/dashoffset calculation from the constructor —
+  they are now set in the constructor once (pixel-space coords).
+
+  REWRITE the method body:
+    const dp  = this.dropPath
+    const len = dp.getTotalLength()   // now returns real pixel length
+    const dur = TIMINGS.stage7_lineDown
+
+    dp.setAttribute('stroke-dasharray',  len)
+    dp.setAttribute('stroke-dashoffset', len)
+    dp.style.opacity = '1'
+
+    // Force reflow
+    void dp.getBoundingClientRect()
+
+    dp.style.transition       = `stroke-dashoffset ${dur}ms linear`
+    dp.style.strokeDashoffset = '0'
+
+    if (this.cornerDot) {
+      this.cornerDot.style.transition = 'opacity 0.2s linear'
+      this.cornerDot.style.opacity    = '1'
+    }
+
+    setTimeout(() => { if (onComplete) onComplete() }, dur)
+
+
+  slideFlowerToBottom()
+  ──────────────────────
+  DELETE this method entirely.
+
+
+  playJumpscare(onEndCallback)
+  ─────────────────────────────
+  UNCHANGED.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3E — js/stateMachine.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMOVE phase8() entirely.
+
+CHANGE phase7() to call phase9() directly after the drop line finishes
+(instead of calling phase8()):
+
+  phase7() {
+    console.log('[P7] Line turns down')
+    this.anim.turnLineDown(() => {
+      setTimeout(() => this.phase9(), TIMINGS.pauseBeforeJumpscare)
+    })
+  }
+
+  // phase8() — DELETED
+
+  phase9() {
+    console.log('[P9] Jumpscare!')
+    this.anim.playJumpscare(() => this.end())
+  }
+
+All other phases (1–6) are UNCHANGED in logic; only the Animations API they
+call has changed internally (div instead of SVG path).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3F — css/animations.css
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+UNCHANGED. The @keyframes petalFall rule is still valid.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3G — js/main.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+UNCHANGED. Start screen grid, sound effects, and trigger button logic are
+not affected by any of these fixes.
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 4 — Z-INDEX LAYER ORDER (top → bottom)
+────────────────────────────────────────────────────────────────────────────────
+
+  z-index 9999  — #jumpscare-video   (fullscreen, topmost)
+  z-index 20    — #flower-container  (flower above the line)
+  z-index 10    — #progress-bar div  (horizontal bar div)
+  z-index 9     — #progress-container / #progress-svg  (drop line SVG)
+  z-index 1     — #loading-screen background
+  z-index 0     — #start-screen
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 5 — FLOWER ALIGNMENT DETAIL (critical, verify after first render)
+────────────────────────────────────────────────────────────────────────────────
+
+The flower SVG internal coordinate system is 128×128 (viewBox).
+Rendered size is 260×260 px (square, no distortion).
+The group has transform="rotate(-8 56 122)" applied.
+
+Stem base BEFORE rotation: SVG local (56, 122)
+  → screen local: x = (56/128)*260 ≈ 113 px from left of container
+                  y = (122/128)*260 ≈ 248 px from top of container
+
+Container placement formula:
+  container.left = tipX - 113
+  container.top  = tipY - 248
+
+After rotation (-8° around point 56,122), the stem base stays at (56,122)
+because that is the pivot point. No offset correction needed for rotation.
+
+If visual alignment is still off after first test, adjust by inspecting
+the rendered stem base position using getBoundingClientRect() on #fp-9
+and comparing to the bar div's right edge at 50%.
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 6 — IMPLEMENTATION ORDER (do in this sequence)
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 1  Edit index.html — restructure elements as described in 3A.
+  Step 2  Edit css/loader.css — replace SVG bar rules with div rules (3B).
+  Step 3  Edit js/config.js — remove stage8_slideDown, add barYFraction (3C).
+  Step 4  Edit js/animations.js — constructor, setProgress, showProgressBar,
+          drawFlower positioning block, turnLineDown, delete slideFlowerToBottom (3D).
+  Step 5  Edit js/stateMachine.js — delete phase8, rewire phase7 (3E).
+  Step 6  Open in browser. Check:
+            a) Bar reaches 90% without wrapping.
+            b) Bar reverses correctly.
+            c) At 50%, flower appears with stem base touching bar tip.
+            d) Bar continues under flower to 85%.
+            e) Vertical drop line forms L-shape at correct screen position.
+            f) Flower stays visible throughout steps c–e.
+            g) Jumpscare fires after pause.
+  Step 7  Fine-tune stemLocalX / stemLocalY in drawFlower() if alignment
+          is off (see Section 5).
+  Step 8  Test at a different viewport size (e.g. 1440×900, 1280×800) to
+          verify responsive behaviour.
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 7 — THINGS TO LEAVE COMPLETELY ALONE
+────────────────────────────────────────────────────────────────────────────────
+
+  - All SVG path data inside #wilted-flower (the fp-0 through fp-10 paths)
+  - The stroke-dashoffset draw-in technique and ORDER loop in drawFlower()
+  - The fill/stroke color values on the flower paths
+  - The petal fall animation at the end of drawFlower()
+  - The jumpscare video element, path, and playJumpscare() logic
+  - The start screen grid, sound effects, and trigger button logic in main.js
+  - chaos-login.html (redirect target — untouched)
+  - The @keyframes flash and @keyframes petalFall rules
+
+================================================================================
+END OF PLAN
+================================================================================

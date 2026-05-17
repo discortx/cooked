@@ -2,56 +2,51 @@ import { TIMINGS } from './config.js';
 
 export class Animations {
     constructor() {
-        this.progressPath  = document.getElementById('progress-path');
-        this.dropPath      = document.getElementById('drop-path');
-        this.video         = document.getElementById('jumpscare-video');
-        this.wiltedFlower  = document.getElementById('wilted-flower');
-        this.cornerDot     = document.getElementById('corner-dot');
+        this.barDiv          = document.getElementById('progress-bar');
+        this.flowerContainer = document.getElementById('flower-container');
+        this.progressSvg     = document.getElementById('progress-svg');
+        this.dropPath        = document.getElementById('drop-path');
+        this.video           = document.getElementById('jumpscare-video');
+        this.wiltedFlower    = document.getElementById('wilted-flower');
+        this.cornerDot       = document.getElementById('corner-dot');
 
-        // Cached actual rendered pixel lengths — computed once on first use
-        this._progressLen  = null;
+        this.updateGeometry = this.updateGeometry.bind(this);
+        this.updateGeometry();
+        window.addEventListener('resize', this.updateGeometry);
     }
 
-    // ─── Internal: compute and cache path lengths, hide bar fully ────────────
+    updateGeometry() {
+        this.W    = window.innerWidth;
+        this.H    = window.innerHeight;
+        this.barY = Math.round(this.H * TIMINGS.barYFraction);
 
-    _initPaths() {
-        const pLen = this.progressPath.getTotalLength(); // actual length in user units
-        this._progressLen = pLen;
-        // Start fully hidden
-        this.progressPath.style.strokeDasharray  = pLen;
-        this.progressPath.style.strokeDashoffset = pLen;
-        this.progressPath.style.transition       = 'none';
+        this.progressSvg.setAttribute('viewBox', `0 0 ${this.W} ${this.H}`);
+
+        const x85 = Math.round(this.W * 0.85);
+        this.dropPath.setAttribute('d', `M ${x85} ${this.barY} L ${x85} ${this.H + 300}`);
+
+        if (this.cornerDot) {
+            this.cornerDot.setAttribute('cx', x85);
+            this.cornerDot.setAttribute('cy', this.barY);
+        }
     }
 
     // ─── Progress bar helpers ────────────────────────────────────────────────
 
-    /**
-     * Animate the progress bar to `percent` over `duration` ms.
-     * All values are actual rendered pixels from getTotalLength().
-     */
     setProgress(percent, duration) {
-        if (!this._progressLen) this._initPaths();
-        const len          = this._progressLen;
-        const targetOffset = len * (1 - percent / 100);
-
-        this.progressPath.style.transition       = 'none';
-        void this.progressPath.offsetWidth;                                // flush
-        this.progressPath.style.transition       = `stroke-dashoffset ${duration}ms linear`;
-        this.progressPath.style.strokeDashoffset = targetOffset;
-    }
-
-    hideProgressBar() {
-        // No-op — bar is hidden by dashoffset; JS controls it entirely
+        void this.barDiv.offsetWidth; // flush layout to ensure transition runs
+        this.barDiv.style.transition = `width ${duration}ms linear`;
+        this.barDiv.style.width      = `${percent}%`;
     }
 
     /**
      * Snap the bar to 50% with no animation (used after flower draw-in).
      */
     showProgressBar() {
-        if (!this._progressLen) this._initPaths();
-        this.progressPath.style.transition       = 'none';
-        this.progressPath.style.strokeDashoffset = (this._progressLen * 0.5);
-        void this.progressPath.offsetWidth;                                // flush
+        this.barDiv.style.transition = 'none';
+        this.barDiv.style.width      = '50%';
+        // Force reflow then allow transitions again:
+        void this.barDiv.offsetWidth;
     }
 
     // ─── Flower draw-in ──────────────────────────────────────────────────────
@@ -72,6 +67,21 @@ export class Animations {
      * @param {Function} onComplete  called after the falling petal finishes
      */
     drawFlower(onComplete) {
+        // 1. Compute flower position from bar tip at 50 %
+        const tipX   = Math.round(this.W * 0.50);           // bar tip pixel X
+        const tipY   = this.barY;                            // bar Y pixel
+
+        // 2. The flower SVG internal stem base is at svg-local (56, 122)
+        //    in a 128×128 viewBox rendered at 260×260 px
+        //    → stemBaseX_local = (56/128) * 260 = 113.75 px from left of container
+        //    → stemBaseY_local = (122/128) * 260 = 247.8 px from top of container
+        const stemLocalX = (56 / 128) * 260;    // ≈ 113
+        const stemLocalY = (122 / 128) * 260;   // ≈ 248
+
+        // 3. Position container so stem base sits on bar tip
+        this.flowerContainer.style.left = `${tipX - stemLocalX}px`;
+        this.flowerContainer.style.top  = `${tipY - stemLocalY}px`;
+
         const el      = this.wiltedFlower;
         const ORDER   = TIMINGS.flowerDrawOrder;
         const PER     = TIMINGS.flowerDrawPerPath;
@@ -79,8 +89,8 @@ export class Animations {
         const FALL_MS = TIMINGS.flowerFallDuration;
 
         // Make flower container invisible while we measure
-        el.style.opacity = '0';
-        void el.getBoundingClientRect(); // force layout so paths can be measured
+        this.flowerContainer.style.opacity = '0';
+        void this.flowerContainer.getBoundingClientRect(); // force layout so paths can be measured
 
         const paths = Array.from(el.querySelectorAll('path'));
 
@@ -101,9 +111,9 @@ export class Animations {
         });
 
         // Fade in the flower container
-        void el.getBoundingClientRect();
-        el.style.transition = 'opacity 0.4s ease';
-        el.style.opacity    = '1';
+        void this.flowerContainer.getBoundingClientRect();
+        this.flowerContainer.style.transition = 'opacity 0.4s ease';
+        this.flowerContainer.style.opacity    = '1';
 
         // Animate each path in draw order
         ORDER.forEach((pathIdx, i) => {
@@ -142,7 +152,9 @@ export class Animations {
     // ─── Post-flower: re-show bar and continue ───────────────────────────────
 
     continueAfterFlower() {
-        this.showProgressBar();
+        this.barDiv.style.transition = 'none';
+        this.barDiv.style.width      = '50%';
+        void this.barDiv.offsetWidth;   // flush
     }
 
     // ─── Turn line downward at 85% point ─────────────────────────────────────
@@ -155,14 +167,15 @@ export class Animations {
      */
     turnLineDown(onComplete) {
         const dp  = this.dropPath;
-        const len = dp.getTotalLength();   // actual length in user units
+        const len = dp.getTotalLength();   // now returns real pixel length
         const dur = TIMINGS.stage7_lineDown;
 
-        dp.style.opacity          = '1';   // unhide (CSS starts it at 0)
-        dp.style.strokeDasharray  = len;
-        dp.style.strokeDashoffset = len;
-        dp.style.transition       = 'none';
-        void dp.offsetWidth;               // flush
+        dp.setAttribute('stroke-dasharray',  len);
+        dp.setAttribute('stroke-dashoffset', len);
+        dp.style.opacity = '1';
+
+        // Force reflow
+        void dp.getBoundingClientRect();
 
         dp.style.transition       = `stroke-dashoffset ${dur}ms linear`;
         dp.style.strokeDashoffset = '0';
@@ -171,18 +184,6 @@ export class Animations {
             this.cornerDot.style.transition = 'opacity 0.2s linear';
             this.cornerDot.style.opacity    = '1';
         }
-
-        setTimeout(() => { if (onComplete) onComplete(); }, dur);
-    }
-
-    // ─── Slide flower to bottom ───────────────────────────────────────────────
-
-    slideFlowerToBottom(onComplete) {
-        const el  = this.wiltedFlower;
-        const dur = TIMINGS.stage8_slideDown || 1500;
-
-        el.style.transition = `transform ${dur}ms ease-in`;
-        el.style.transform  = 'translateY(1100px)';
 
         setTimeout(() => { if (onComplete) onComplete(); }, dur);
     }

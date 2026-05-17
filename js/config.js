@@ -32,12 +32,13 @@ export const TIMINGS = {
     stage6_finalForward: 6000,
     // Phase 7: Vertical drop line grows from 85% point downward
     stage7_lineDown: 1500,
-    // Phase 8: Flower slides down alongside the line
-    stage8_slideDown: 1500,
     // Phase 9: 3-second pause before jumpscare
     pauseBeforeJumpscare: 3000,
     // Phase 9: Jumpscare fade-in
     jumpscareFadeIn: 100,
+
+    barYFraction: 0.78,   // barY = window.innerHeight * this
+    barThickness: 20,     // px — must match CSS height and SVG stroke-width
 
     // --- Flower draw config ---
     // Draw order: main stem → lower branch → left leaf → right leaf →
@@ -47,8 +48,4 @@ export const TIMINGS = {
     flowerDrawPerPath: 450,   // ms per path stroke
     flowerFillDelay: 180,     // ms for fill to fade after stroke
     flowerFallDuration: 1100, // ms for falling petal drop
-
-    // --- Drop line config ---
-    // SVG path M 850 900 L 850 2000 → length = 1100 SVG units
-    dropLength: 1100,
 };
