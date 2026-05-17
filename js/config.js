@@ -1,3 +1,4 @@
+// Created by SilkSong
 export const SOUND_EFFECTS = [
     "among-us-role-reveal-sound.mp3",
     "anime-wow-sound-effect_mODx6ivQ.mp3",
@@ -35,7 +36,7 @@ export const TIMINGS = {
     // Phase 9: 3-second pause before jumpscare
     pauseBeforeJumpscare: 3000,
     // Phase 9: Jumpscare fade-in
-    jumpscareFadeIn: 1000,
+    jumpscareFadeIn: 500,
     
     // Additional delays
     delayBeforeP2: 4000,

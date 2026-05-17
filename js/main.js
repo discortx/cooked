@@ -1,3 +1,4 @@
+// Created by SilkSong
 import { StateMachine } from './stateMachine.js';
 import { SOUND_EFFECTS } from './config.js';
 

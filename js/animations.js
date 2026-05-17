@@ -1,3 +1,4 @@
+// Created by SilkSong
 import { TIMINGS } from './config.js';
 
 export class Animations {

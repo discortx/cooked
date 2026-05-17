@@ -1,3 +1,4 @@
+/* Created by SilkSong */
 /* Falling petal keyframe — applied inline via JS, but referenced here for clarity */
 @keyframes petalFall {
     0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
