@@ -2592,19 +2592,21 @@
             const counter = document.getElementById('wordCounter');
             if(area) area.addEventListener('input', () => {
                 const words = area.value.trim().split(/\s+/).filter(Boolean).length;
-                // The counter never reaches zero — even if they type 10000 words
-                let remaining = Math.max(1, 200 - words);
-                if (words >= 200) {
-                    // Move the goalposts: keep them 1 short, forever
-                    remaining = 1;
-                    counter.textContent = `1 word remaining. Just one more. We promise.`;
+                const remaining = Math.max(0, 200 - words);
+                if (remaining === 0) {
+                    counter.textContent = `0 words remaining`;
                 } else {
                     counter.textContent = `${remaining} words remaining`;
                 }
             });
             if(document.getElementById('secSubmit')) document.getElementById('secSubmit').addEventListener('click', () => {
-                playWomp();
-                toast("Defense rejected. Try again. Or don't.");
+                const words = document.getElementById('explainArea').value.trim().split(/\s+/).filter(Boolean).length;
+                if (words >= 200) {
+                    document.getElementById('secOverlay').style.display = 'none';
+                } else {
+                    playWomp();
+                    toast("Defense rejected. Try again. Or don't.");
+                }
             });
         });
 
