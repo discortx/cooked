@@ -1107,6 +1107,8 @@
 
     <!-- ============== LOGIN PAGE ============== -->
     <div class="page active" id="pageLogin">
+        <a class="top-nav" id="goSignupTop">Don't have an account? Sign up →</a>
+
         <div class="wrap" id="login-form">
             <div id="loginFlash"></div>
             <h1>Welcome Back?</h1>
@@ -1152,10 +1154,6 @@
                 <button id="submitBtn" type="button">LOG IN</button>
             </div>
 
-            <div class="bottom-nav">
-                Don't have an account? Please <a href="signup.html" class="nav-link" id="goSignup">click HERE</a> to GO to the <span
-                    class="nav-faded" id="goSignupFaded">signup page</span>
-            </div>
         </div>
     </div>
     <!-- ============== END LOGIN PAGE ============== -->
@@ -2031,6 +2029,9 @@
             const el = document.getElementById(id);
             if (el) el.addEventListener('click', (e) => e.preventDefault());
         });
+        // top-nav signup link
+        const goSignupTop = document.getElementById('goSignupTop');
+        if (goSignupTop) goSignupTop.addEventListener('click', () => window.location.href = 'signup.html');
         // faded page-name links â€” these actually navigate
         const goSignupFaded = document.getElementById('goSignupFaded');
         if (goSignupFaded) goSignupFaded.addEventListener('click', () => showPage('pageSignup'));
