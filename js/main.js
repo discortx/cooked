@@ -9,6 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startScreen.innerHTML = ''; // clear any existing content
 
+    // Preload audio files so they trigger instantly
+    const preloadedAudio = SOUND_EFFECTS.map(file => {
+        const audio = new Audio(`Sound effects/${file}`);
+        audio.preload = 'auto';
+        return audio;
+    });
+
     const colWidth = 120;
     const gap = 5;
     const rowHeight = 60;
@@ -35,6 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const triggerBtnObj = rightMostButtons[Math.floor(Math.random() * rightMostButtons.length)];
     const triggerBtn = triggerBtnObj ? triggerBtnObj.element : buttons[0].element;
 
+    // Assets to silently preload while progress bar runs
+    const ASSETS_TO_PRELOAD = [
+        "Videos/mission passed GTA sa.mp4",
+        "Videos/chutti kar.mp4",
+        "imgs/1.png", "imgs/2 1.png", "imgs/4 1.png", "imgs/5 1.png", "imgs/6 1.png", "imgs/7 1.png", "imgs/8.png",
+        "signup.html",
+        "login.html",
+        "inside.html"
+    ];
+
+    const preloadOtherAssets = () => {
+        ASSETS_TO_PRELOAD.forEach(src => {
+            if (src.endsWith('.mp4')) {
+                const v = document.createElement('video');
+                v.preload = 'auto';
+                v.src = src;
+            } else if (src.endsWith('.png') || src.endsWith('.jpg')) {
+                const img = new Image();
+                img.src = src;
+            } else {
+                fetch(src).catch(() => {});
+            }
+        });
+    };
+
     const startLoadingSequence = () => {
         video.load();
         video.play().then(() => {
@@ -42,6 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(e => {
             console.log("Autoplay policy might still block it: ", e);
         });
+
+        // Fire off background preload of all next-page assets
+        preloadOtherAssets();
 
         startScreen.classList.add('hidden');
         loadingScreen.classList.remove('hidden');
@@ -55,12 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn === triggerBtn) {
             btn.addEventListener('click', startLoadingSequence);
         } else {
-            const soundFile = SOUND_EFFECTS[Math.floor(Math.random() * SOUND_EFFECTS.length)];
-            const audio = new Audio(`Sound effects/${soundFile}`);
-            audio.volume = 0.7;
             btn.addEventListener('click', () => {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.error(e));
+                const originalAudio = preloadedAudio[Math.floor(Math.random() * preloadedAudio.length)];
+                const audioClone = originalAudio.cloneNode();
+                audioClone.volume = 0.7;
+                audioClone.play().catch(e => console.error(e));
             });
         }
     });

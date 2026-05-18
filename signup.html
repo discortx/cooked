@@ -1081,22 +1081,6 @@
         </div>
     </div>
 
-    <!-- Security Warning (hidden by default) -->
-    <div class="sec-overlay" id="secOverlay" style="display:none;">
-        <div class="sec-box">
-            <div class="sec-head">⚠️ SECURITY WARNING</div>
-            <div class="sec-body" id="secBody">
-                <p><strong>Suspicious activity detected:</strong> you are attempting to log in. This behavior has been
-                    flagged as unusual. Authorities have been notified.</p>
-                <p>Your IP address is: <code>666.666.666.666</code></p>
-                <p>Please explain yourself.</p>
-            </div>
-            <div class="sec-actions" id="secActions">
-                <button id="secExplain">I Can Explain</button>
-                <button id="secRun" class="danger">Run</button>
-            </div>
-        </div>
-    </div>
 
     <div class="badge">🔒 TOTALLY SECURE LOGIN™</div>
     <div class="rand-spin" id="randSpin"></div>
@@ -2311,11 +2295,22 @@
                     clearInterval(id);
                     celebrate();
                     setTimeout(() => {
-                        sadTrombone();
-                        finalMsg.innerHTML = '<p style="color:#ff00cc;font-size:1.3rem;text-align:center;margin-top:14px;"><strong>Session expired.</strong><br/>Please restart from Step 1.</p>';
-                        finalStart.disabled = false;
-                        finalStart.textContent = 'Restart 😭';
-                        finalStart.onclick = () => { showStep(1); };
+                        let attempts = parseInt(sessionStorage.getItem('signupAttempts') || '0', 10);
+                        attempts++;
+                        sessionStorage.setItem('signupAttempts', attempts);
+
+                        if (attempts === 1) {
+                            sadTrombone();
+                            finalMsg.innerHTML = '<p style="color:#ff00cc;font-size:1.3rem;text-align:center;margin-top:14px;"><strong>Session expired.</strong><br/>Please restart from Step 1.</p>';
+                            finalStart.disabled = false;
+                            finalStart.textContent = 'Restart 😭';
+                            finalStart.onclick = () => { showStep(1); };
+                        } else {
+                            finalMsg.innerHTML = '<p style="color:#39ff14;font-size:1.3rem;text-align:center;margin-top:14px;"><strong>Your account has been unfortunately created.</strong></p>';
+                            finalStart.disabled = false;
+                            finalStart.textContent = 'Go to Login';
+                            finalStart.onclick = () => { window.location.href = 'login.html'; };
+                        }
                     }, 900);
                 }
             }, 180);
@@ -2578,60 +2573,6 @@
                 document.getElementById('tcOverlay').style.display = 'none';
             });
         })();
-        /* ============ Security Warning Popup ============ */
-        let securityShown = false;
-        let firstTypeTimer = null;
-        document.addEventListener('input', (e) => {
-            const t = e.target;
-            if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) return;
-            if (securityShown || firstTypeTimer) return;
-            firstTypeTimer = setTimeout(() => {
-                showSecurityPopup();
-            }, 3000);
-        }, true);
-
-        function showSecurityPopup() {
-            if (securityShown) return;
-            securityShown = true;
-            playOrchestralSting();
-            document.getElementById('secOverlay').style.display = 'flex';
-        }
-
-        if(document.getElementById('secExplain')) document.getElementById('secExplain').addEventListener('click', () => {
-            const body = document.getElementById('secBody');
-            const actions = document.getElementById('secActions');
-            body.innerHTML = `
-        <p>Explain yourself (minimum 100 words required):</p>
-    <textarea id="explainArea" placeholder="Begin your defense..."></textarea>
-        <div id="wordCounter">100 words remaining</div>
-  `;
-            actions.innerHTML = `<button id="secSubmit" class="danger">Submit Defense</button>`;
-            const area = document.getElementById('explainArea');
-            const counter = document.getElementById('wordCounter');
-            if(area) area.addEventListener('input', () => {
-                const words = area.value.trim().split(/\s+/).filter(Boolean).length;
-                const remaining = Math.max(0, 100 - words);
-                if (remaining === 0) {
-                    counter.textContent = `0 words remaining`;
-                } else {
-                    counter.textContent = `${remaining} words remaining`;
-                }
-            });
-            if(document.getElementById('secSubmit')) document.getElementById('secSubmit').addEventListener('click', () => {
-                const words = document.getElementById('explainArea').value.trim().split(/\s+/).filter(Boolean).length;
-                if (words >= 100) {
-                    document.getElementById('secOverlay').style.display = 'none';
-                } else {
-                    playWomp();
-                    toast("Defense rejected. Try again. Or don't.");
-                }
-            });
-        });
-
-        if(document.getElementById('secRun')) document.getElementById('secRun').addEventListener('click', () => {
-            toast("U can't Run", 2600);
-        });
-
         /* ============ Progressive Page Tilt ============ */
         const tiltMap = {
             1: 0,
