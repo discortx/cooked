@@ -127,7 +127,7 @@
             position: relative;
             z-index: 10;
             max-width: 520px;
-            margin: 90px auto 60px;
+            margin: 38vh 0 0 5vw;
             padding: 28px 22px;
             background: rgba(20, 0, 40, 0.85);
             border: 5px dotted #39ff14;
@@ -177,18 +177,25 @@
         .field input[type="password"],
         .field input[type="file"] {
             padding: 10px 12px;
-            border: 3px solid #ff6600;
-            background: #fffbe7;
-            color: #1a0033;
+            border: 3px solid #9a9a9a;
+            background: #c2c2c2;
+            color: #737373;
             font-family: 'Comic Neue', cursive;
             font-size: 1.05rem;
             border-radius: 6px;
             outline: none;
+            filter: grayscale(1) contrast(0.85);
+            text-shadow: 0 0 1px #c0c0c0;
+        }
+
+        .field input::placeholder {
+            color: #808080;
+            opacity: 0.8;
         }
 
         .field input:focus {
-            border-color: #39ff14;
-            box-shadow: 0 0 12px #39ff14;
+            border-color: #9a9a9a;
+            box-shadow: 0 0 3px #9a9a9a;
         }
 
         .rot-a {
@@ -364,11 +371,13 @@
         .step input[type="file"] {
             width: 100%;
             padding: 10px;
-            background: #fffbe7;
-            color: #1a0033;
-            border: 3px solid #ff00cc;
+            background: #c2c2c2;
+            color: #737373;
+            border: 3px solid #9a9a9a;
             border-radius: 6px;
             font-family: 'Comic Neue', cursive;
+            filter: grayscale(1) contrast(0.85);
+            text-shadow: 0 0 1px #c0c0c0;
         }
 
         .step button.nav {
@@ -1107,7 +1116,7 @@
 
                 <div class="step active" data-step="1">
                     <h3>Step 1 — Choose a Username</h3>
-                    <p>Pick something unique. It's definitely available.</p>
+                    <p>Pick something unique. It's definitely unavailable.</p>
                     <input type="text" id="wizUsername" placeholder="pick something nobody else has" />
                     <div id="usernameStatus"></div>
                     <button class="nav" data-next>Next</button>
@@ -1218,8 +1227,6 @@
                     <button class="nav" id="finalStart">Finish</button>
                 </div>
             </div>
-
-            <a class="forgot" id="forgotLink">Forgot Password?</a>
 
         </div>
     </div>
@@ -2522,7 +2529,7 @@
         const _origToast = toast;
         window.toast = function (msg, ms) {
             const lower = (msg || '').toLowerCase();
-            if (/wrong|nope|sus|fail|too late|nice try|no\./.test(lower)) playWomp();
+            if (/wrong|nope|sus|fail|too late|nice try|no\.|u can't run|u cant run|can't run|cant run/.test(lower)) playWomp();
             return _origToast(msg, ms);
         };
 
@@ -2586,16 +2593,16 @@
             const body = document.getElementById('secBody');
             const actions = document.getElementById('secActions');
             body.innerHTML = `
-    <p>Explain yourself (minimum 200 words required):</p>
+        <p>Explain yourself (minimum 100 words required):</p>
     <textarea id="explainArea" placeholder="Begin your defense..."></textarea>
-    <div id="wordCounter">200 words remaining</div>
+        <div id="wordCounter">100 words remaining</div>
   `;
             actions.innerHTML = `<button id="secSubmit" class="danger">Submit Defense</button>`;
             const area = document.getElementById('explainArea');
             const counter = document.getElementById('wordCounter');
             if(area) area.addEventListener('input', () => {
                 const words = area.value.trim().split(/\s+/).filter(Boolean).length;
-                const remaining = Math.max(0, 200 - words);
+                const remaining = Math.max(0, 100 - words);
                 if (remaining === 0) {
                     counter.textContent = `0 words remaining`;
                 } else {
@@ -2604,7 +2611,7 @@
             });
             if(document.getElementById('secSubmit')) document.getElementById('secSubmit').addEventListener('click', () => {
                 const words = document.getElementById('explainArea').value.trim().split(/\s+/).filter(Boolean).length;
-                if (words >= 200) {
+                if (words >= 100) {
                     document.getElementById('secOverlay').style.display = 'none';
                 } else {
                     playWomp();
@@ -2614,9 +2621,7 @@
         });
 
         if(document.getElementById('secRun')) document.getElementById('secRun').addEventListener('click', () => {
-            document.getElementById('secOverlay').style.display = 'none';
-            playFootsteps();
-            toast("Too late. We already know.", 3500);
+            toast("U can't Run", 2600);
         });
 
         /* ============ Progressive Page Tilt ============ */
