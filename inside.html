@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>神机-009</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=UnifrakturMaguntia&display=swap"
+        rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-        html, body {
+        html,
+        body {
             width: 100%;
             height: 100%;
             font-family: 'Comic Neue', 'Comic Sans MS', cursive;
@@ -20,7 +27,7 @@
         body {
             background:
                 repeating-linear-gradient(45deg,
-                    #ff00cc 0px,  #ff00cc 30px,
+                    #ff00cc 0px, #ff00cc 30px,
                     #39ff14 30px, #39ff14 60px,
                     #ff6600 60px, #ff6600 90px,
                     #1a0033 90px, #1a0033 120px);
@@ -34,16 +41,36 @@
         }
 
         @keyframes bgPulse {
-            0%   { background-position: 0 0;       filter: hue-rotate(0deg); }
-            50%  { background-position: 100% 100%; filter: hue-rotate(40deg); }
-            100% { background-position: 0 0;       filter: hue-rotate(0deg); }
+            0% {
+                background-position: 0 0;
+                filter: hue-rotate(0deg);
+            }
+
+            50% {
+                background-position: 100% 100%;
+                filter: hue-rotate(40deg);
+            }
+
+            100% {
+                background-position: 0 0;
+                filter: hue-rotate(0deg);
+            }
+        }
+
+        /* Bouncing images — absolute inside fixed stage container */
+        .bouncer {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.75;
+            will-change: transform;
+            image-rendering: auto;
         }
 
         /* ── Big red button ── */
         #triggerBtn {
-            font-family: 'UnifrakturMaguntia', serif;
-            font-size: 2.4rem;
-            padding: 28px 60px;
+            font-family: Arial, sans-serif;
+            font-size: 0.8rem;
+            padding: 38px 98px;
             background: #cc0000;
             color: #fff;
             border: 4px solid #ff4444;
@@ -52,16 +79,26 @@
             box-shadow: 0 0 40px #ff0000, 0 0 80px #cc000088;
             transition: transform 0.1s, box-shadow 0.1s;
             letter-spacing: 2px;
+            display: none;
+            /* Hidden initially */
+            z-index: 100;
         }
+
+        #triggerBtn.show {
+            display: inline-block;
+        }
+
         #triggerBtn:hover {
             transform: scale(1.05);
             box-shadow: 0 0 60px #ff0000, 0 0 120px #cc000099;
         }
+
         #triggerBtn:active {
             transform: scale(0.97);
         }
+
         #triggerBtn.hidden {
-            display: none;
+            display: none !important;
         }
 
         /* ── Video wrapper ── */
@@ -72,11 +109,13 @@
             align-items: center;
             justify-content: center;
             background: rgba(0, 0, 0, 0.85);
-            z-index: 10;
+            z-index: 110;
         }
+
         #videoWrap.visible {
             display: flex;
         }
+
         #mainVideo {
             /* Render at native dimensions — no stretching */
             max-width: none;
@@ -91,7 +130,7 @@
             top: 0;
             left: 50%;
             transform: translateX(-50%) translateY(-120%);
-            z-index: 20;
+            z-index: 120;
             background: rgba(0, 0, 0, 0.82);
             border: 2px solid #39ff14;
             border-top: none;
@@ -104,14 +143,34 @@
             text-shadow: 0 0 12px #39ff14, 0 0 4px #fff;
             transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
+
         #banner.show {
             transform: translateX(-50%) translateY(0%);
         }
+
+        /* GTA Canvas */
+        #gtaCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+
+        #gtaCanvas.visible {
+            display: block;
+        }
     </style>
 </head>
+
 <body>
 
-    <button id="triggerBtn">&#9654; Play</button>
+    <canvas id="gtaCanvas"></canvas>
+    <video id="gtaVideo" src="Videos/mission passed GTA sa.mp4" style="display:none;" playsinline></video>
+
+    <button id="triggerBtn">Dont touch me</button>
 
     <div id="videoWrap">
         <video id="mainVideo" src="Videos/chutti kar.mp4"></video>
@@ -120,16 +179,69 @@
     <div id="banner">Tou Mera Putar Chutti kr</div>
 
     <script>
-        const btn      = document.getElementById('triggerBtn');
-        const wrap     = document.getElementById('videoWrap');
-        const video    = document.getElementById('mainVideo');
-        const banner   = document.getElementById('banner');
+        // --- GTA Video Chroma Key logic ---
+        const gtaVideo = document.getElementById('gtaVideo');
+        const gtaCanvas = document.getElementById('gtaCanvas');
+        const ctx = gtaCanvas.getContext('2d', { willReadFrequently: true });
+        const btn = document.getElementById('triggerBtn');
+
+        function resizeCanvas() {
+            gtaCanvas.width = window.innerWidth;
+            gtaCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function processFrame() {
+            if (gtaVideo.paused || gtaVideo.ended) return;
+            ctx.drawImage(gtaVideo, 0, 0, gtaCanvas.width, gtaCanvas.height);
+            const frame = ctx.getImageData(0, 0, gtaCanvas.width, gtaCanvas.height);
+            const l = frame.data.length / 4;
+            for (let i = 0; i < l; i++) {
+                const r = frame.data[i * 4 + 0];
+                const g = frame.data[i * 4 + 1];
+                const b = frame.data[i * 4 + 2];
+                // Green screen removal threshold
+                if (g > 100 && g > r * 1.5 && g > b * 1.5) {
+                    frame.data[i * 4 + 3] = 0;
+                }
+            }
+            ctx.putImageData(frame, 0, 0);
+            requestAnimationFrame(processFrame);
+        }
+
+        gtaVideo.addEventListener('play', () => {
+            gtaCanvas.classList.add('visible');
+            requestAnimationFrame(processFrame);
+        });
+
+        gtaVideo.addEventListener('ended', () => {
+            gtaCanvas.classList.remove('visible');
+            btn.classList.add('show');
+        });
+
+        // Try to auto-play on load after a 3-second delay
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                gtaVideo.play().catch(e => {
+                    console.log("Autoplay blocked, showing button anyway", e);
+                    btn.classList.add('show');
+                });
+            }, 3000);
+        });
+
+        // --- Original video logic ---
+        const wrap = document.getElementById('videoWrap');
+        const video = document.getElementById('mainVideo');
+        const banner = document.getElementById('banner');
 
         btn.addEventListener('click', () => {
-            video.volume = 1;
-            wrap.classList.add('visible');
             btn.classList.add('hidden');
-            video.play();
+            setTimeout(() => {
+                video.volume = 1;
+                wrap.classList.add('visible');
+                video.play();
+            }, 2000);
         });
 
         video.addEventListener('play', () => {
@@ -139,6 +251,86 @@
         video.addEventListener('ended', () => {
             window.location.href = 'index.html';
         });
+
+        /* ============ Bouncing images (DVD-screensaver physics) ============ */
+        (function initBouncers() {
+            const stage = document.createElement('div');
+            stage.style.cssText = 'position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:2;';
+            document.body.appendChild(stage);
+
+            const srcs = [
+                'imgs/1.png',
+                'imgs/2 1.png',
+                'imgs/4 1.png',
+                'imgs/5 1.png',
+                'imgs/6 1.png',
+                'imgs/7 1.png',
+                'imgs/8.png'
+            ];
+            const isMobile = window.innerWidth < 600;
+            const count = isMobile ? 5 : 13;
+
+            const bouncers = [];
+
+            for (let i = 0; i < count; i++) {
+                const img = document.createElement('img');
+                img.className = 'bouncer';
+                img.src = srcs[i % srcs.length];
+
+                const size = 90 + Math.random() * 90; // 90-180px
+                img.style.width = size + 'px';
+                img.style.height = 'auto';
+                img.draggable = false;
+
+                stage.appendChild(img);
+
+                const speed = 0.6 + Math.random() * 1.4;
+                const angle = Math.random() * Math.PI * 2;
+
+                bouncers.push({
+                    el: img,
+                    x: Math.random() * (window.innerWidth - size),
+                    y: Math.random() * (window.innerHeight - size),
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    rot: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 0.6,
+                    w: size,
+                    h: size
+                });
+            }
+
+            bouncers.forEach(b => {
+                b.el.onload = () => { b.h = b.el.offsetHeight || b.w; };
+            });
+
+            function tick() {
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                for (const b of bouncers) {
+                    b.x += b.vx;
+                    b.y += b.vy;
+                    b.rot += b.rotSpeed;
+
+                    const bh = b.el.offsetHeight || b.w;
+
+                    if (b.x <= 0) { b.x = 0; b.vx = Math.abs(b.vx); }
+                    if (b.x + b.w >= vw) { b.x = vw - b.w; b.vx = -Math.abs(b.vx); }
+                    if (b.y <= 0) { b.y = 0; b.vy = Math.abs(b.vy); }
+                    if (b.y + bh >= vh) { b.y = vh - bh; b.vy = -Math.abs(b.vy); }
+
+                    b.el.style.left = b.x + 'px';
+                    b.el.style.top = b.y + 'px';
+                    b.el.style.transform = `rotate(${b.rot.toFixed(2)}deg)`;
+                }
+
+                requestAnimationFrame(tick);
+            }
+
+            requestAnimationFrame(tick);
+        })();
     </script>
 </body>
+
 </html>

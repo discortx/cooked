@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -1367,7 +1367,16 @@
                 return;
             }
             if (!checkNoPlaceholders(['loginUser', 'loginPass'])) return;
-            toast("Fine. You win. For now.", 3500);
+            
+            const userVal = document.getElementById('loginUser').value.trim();
+            const passVal = document.getElementById('loginPass').value.trim();
+            
+            if (userVal !== '' && passVal !== '' && robotTries >= robotLines.length) {
+                window.location.href = 'inside.html';
+            } else {
+                toast("Nope. You really thought that would work? Fill out the fields and prove you are not a robot first.", 3500);
+                playWomp();
+            }
         });
 
         /* ============ Forgot Password runaway ============ */
