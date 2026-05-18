@@ -127,12 +127,13 @@
             position: relative;
             z-index: 10;
             max-width: 520px;
-            margin: 38vh 0 0 5vw;
+            margin: 12vh 0 5vh 5vw;
             padding: 28px 22px;
             background: rgba(20, 0, 40, 0.85);
             border: 5px dotted #39ff14;
             border-radius: 18px;
             box-shadow: 0 0 30px #ff00cc, inset 0 0 25px #ff6600;
+            transform: rotate(-6deg);
         }
 
         #login-form {
@@ -1134,20 +1135,11 @@
 
             <template id="tplUser">
                 <div class="field rot-a">
-                    <label for="loginUser">Username</label>
                     <input type="text" id="loginUser" autocomplete="off" placeholder="Username" data-real="1" />
                 </div>
             </template>
             <template id="tplPass">
                 <div class="field rot-b">
-                    <label for="loginPass">
-                        Password
-                        <span class="tooltip-host">
-                            <span class="info-i">i</span>
-                            <span class="tooltip">Must be 8â€“9 characters, include a prime number spelled out in Latin,
-                                and your mother's disappointment.</span>
-                        </span>
-                    </label>
                     <input type="password" id="loginPass" autocomplete="off" placeholder="Password" data-real="1" />
                 </div>
             </template>
