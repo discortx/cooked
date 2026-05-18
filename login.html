@@ -1185,10 +1185,13 @@
             document.body.appendChild(stage);
 
             const srcs = [
-                'imgs/4f03288dd8a6f79cab9db1f04a31b452-removebg-preview.png',
-                'imgs/hq720-removebg-preview.png',
-                'imgs/images-removebg-preview.png',
-                'imgs/images__1_-removebg-preview.png'
+                'imgs/1.png',
+                'imgs/2 1.png',
+                'imgs/4 1.png',
+                'imgs/5 1.png',
+                'imgs/6 1.png',
+                'imgs/7 1.png',
+                'imgs/8.png'
             ];
             const isMobile = window.innerWidth < 600;
             const count = isMobile ? 5 : 13;
@@ -1200,8 +1203,7 @@
                 img.className = 'bouncer';
                 img.src = srcs[i % srcs.length];
 
-                const isBig = srcs[i % srcs.length].includes('4f03288dd8a6f79cab9db1f04a31b452');
-                const size = isBig ? 200 + Math.random() * 60 : 80 + Math.random() * 70; // big one: 200â€“260px, others: 80â€“150px
+                const size = 90 + Math.random() * 90; // 90-180px
                 img.style.width = size + 'px';
                 img.style.height = 'auto';
                 img.draggable = false;
