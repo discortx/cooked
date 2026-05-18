@@ -133,7 +133,7 @@
             border: 5px dotted #39ff14;
             border-radius: 18px;
             box-shadow: 0 0 30px #ff00cc, inset 0 0 25px #ff6600;
-            transform: rotate(-6deg);
+            transform: rotate(-12deg);
         }
 
         #login-form {
@@ -1125,15 +1125,11 @@
 
                 <div class="step" data-step="2">
                     <h3>Step 2 — Choose a Password</h3>
-                    <p>Make it strong.
-                        <span class="tooltip-host">
-                            <span class="info-i">i</span>
-                            <span class="tooltip">Must be 8–9 chars, include a prime number in Latin, and your mother's
-                                disappointment.</span>
-                        </span>
-                    </p>
+                    <p>Make it strong.</p>
                     <input type="text" id="wizPassword" placeholder="make it weird" />
-                    <button class="nav" data-next>Next</button>
+                    <ul id="rulesList" class="rules-list" style="list-style: none; padding: 0; font-size: 0.9rem; margin-top: 10px;"></ul>
+                    <div id="strengthMeter" class="strength" style="display:none;">WEAK 💀</div>
+                    <button class="nav" data-next style="margin-top: 12px;">Next</button>
                 </div>
 
                 <div class="step" data-step="3">
@@ -1164,10 +1160,11 @@
                 </div>
 
                 <div class="step" data-step="6">
-                    <h3>Step 6 — Toaster Check</h3>
-                    <p>Confirm you are not a toaster:</p>
-                    <button class="nav yes" data-next>Yes</button>
-                    <button class="nav alsoyes" data-next>Also Yes</button>
+                    <h3>Step 6 — Pick Your Debuff</h3>
+                    <p>&gt; Every account comes with one inconvenience.</p>
+                    <button class="nav" data-next style="display:block; width:100%; margin-top:8px;">Wet socks forever</button>
+                    <button class="nav yes" data-next style="display:block; width:100%; margin-top:8px;">1% battery anxiety forever</button>
+                    <button class="nav alsoyes" data-next style="display:block; width:100%; margin-top:8px;">Random WiFi disruptions forever</button>
                 </div>
 
                 <div class="step" data-step="7">
@@ -1193,19 +1190,18 @@
                 </div>
 
                 <div class="step" data-step="9">
-                    <h3>Step 9 — Secret Question</h3>
-                    <p>Choose a question only you can answer.</p>
+                    <h3>Step 9 — Identity Harvesting</h3>
+                    <p>Help us personalize your suffering.</p>
                     <select id="suSecret"
                         style="width:100%;padding:10px;background:#fffbe7;color:#1a0033;border:3px solid #ff6600;border-radius:6px;font-family:'Comic Neue',cursive;margin-bottom:8px;">
                         <option value="">-- Choose your trauma --</option>
-                        <option>What is the name of your first regret?</option>
-                        <option>What sound does your anxiety make?</option>
-                        <option>What is the WiFi password of your childhood home?</option>
-                        <option>What were you doing on the 3rd Tuesday of last month at 2:47 PM?</option>
-                        <option>How many windows are in your hometown?</option>
-                        <option>Which season betrayed you first?</option>
+                        <option>Where did you hide it?</option>
+                        <option>Whats your Bank Details?</option>
+                        <option>What year did hope leave your body?</option>
+                        <option>Which identity are you using today?</option>
+                        <option>What would you sell your soul for?</option>
                     </select>
-                    <input type="text" id="suSecretAns" placeholder="answer (we will judge it)" style="width:100%;" />
+                    <input type="text" id="suSecretAns" placeholder="data improves user experience™" style="width:100%;" />
                     <button class="nav" data-next>Next</button>
                 </div>
 
@@ -2131,6 +2127,17 @@
                 9: 'suSecretAns',
             };
             const fieldId = stepFieldMap[currentStep];
+
+            if (currentStep === 2) {
+                const pwd = document.getElementById('wizPassword').value;
+                const allGood = window.checkPasswordRules ? window.checkPasswordRules(pwd) : true;
+                if (!allGood) {
+                    toast("Password does not meet all rules.");
+                    playWomp();
+                    return false;
+                }
+            }
+
             if (!fieldId) return true;
 
             const field = document.getElementById(fieldId);
@@ -2858,30 +2865,22 @@
             })();
 
         }
-        if (document.getElementById('suPassword')) {
-            /* ---- Impossible password rules ---- */
-            const suPassword = document.getElementById('suPassword');
+        if (document.getElementById('wizPassword')) {
+            /* ---- Password rules ---- */
+            const suPassword = document.getElementById('wizPassword');
             const rulesList = document.getElementById('rulesList');
             const strengthMeter = document.getElementById('strengthMeter');
-            const suUsername = document.getElementById('suUsername');
+            const suUsername = document.getElementById('wizUsername');
 
             const allRules = [
                 { id: 'emoji', text: 'Must include an emoji' },
-                { id: 'noEmoji', text: 'Must NOT include an emoji' },
                 { id: 'len10', text: 'Must be exactly 10 characters' },
-                { id: 'len11', text: 'Must be exactly 11 characters' },
-                { id: 'len12', text: 'Must be exactly 12 characters (we changed our mind)' },
                 { id: 'hasNum', text: 'Must contain a number' },
-                { id: 'noNum', text: 'Numbers are not allowed' },
-                { id: 'backwards', text: 'Must spell a word backwards' },
                 { id: 'noNameLetters', text: 'Must not contain any letter found in your own name' },
                 { id: 'upper', text: 'Must contain uppercase letters' },
-                { id: 'noUpper', text: 'Uppercase is forbidden here' },
-                { id: 'palindrome', text: 'Must be a palindrome' },
-                { id: 'startConsonant', text: 'Must start with a consonant' },
-                { id: 'startVowel', text: 'Actually it must start with a vowel' },
-                { id: 'noRepeats', text: 'No character may appear twice' },
-                { id: 'manyRepeats', text: 'Must repeat at least one character 4 times' }
+                { id: 'startVowel', text: 'Must start with a vowel' },
+                { id: 'manyRepeats', text: 'Must repeat at least one character 4 times' },
+                { id: 'special', text: 'Must contain a special character (!@#$%)' }
             ];
 
             function ruleSatisfied(rule, pwd) {
@@ -2889,51 +2888,29 @@
                 const emojiRe = /[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{2600}-\u{27BF}]/u;
                 switch (rule.id) {
                     case 'emoji': return emojiRe.test(pwd);
-                    case 'noEmoji': return !emojiRe.test(pwd);
                     case 'len10': return pwd.length === 10;
-                    case 'len11': return pwd.length === 11;
-                    case 'len12': return pwd.length === 12;
                     case 'hasNum': return /\d/.test(pwd);
-                    case 'noNum': return !/\d/.test(pwd);
-                    case 'backwards': return pwd.length >= 4 && /^[a-z]+$/i.test(pwd); // we lie: never satisfied via passive check
                     case 'noNameLetters': return name.length > 0 && ![...pwd.toLowerCase()].some(ch => name.includes(ch));
                     case 'upper': return /[A-Z]/.test(pwd);
-                    case 'noUpper': return !/[A-Z]/.test(pwd);
-                    case 'palindrome': return pwd.length >= 3 && pwd === [...pwd].reverse().join('');
-                    case 'startConsonant': return /^[bcdfghjklmnpqrstvwxyz]/i.test(pwd);
                     case 'startVowel': return /^[aeiou]/i.test(pwd);
-                    case 'noRepeats': return new Set(pwd).size === pwd.length && pwd.length > 0;
                     case 'manyRepeats': {
                         const counts = {};
                         for (const c of pwd) counts[c] = (counts[c] || 0) + 1;
                         return Object.values(counts).some(n => n >= 4);
                     }
+                    case 'special': return /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(pwd);
                 }
                 return false;
             }
 
-            let activeRules = [allRules[0], allRules[2], allRules[5], allRules[7], allRules[8]];
+            let activeRules = [...allRules];
 
-            function pickNewRule(replaceId) {
-                // Pick a rule that's intentionally contradicting the just-satisfied one
-                const contradictions = {
-                    emoji: 'noEmoji', noEmoji: 'emoji',
-                    len10: 'len11', len11: 'len12', len12: 'len10',
-                    hasNum: 'noNum', noNum: 'hasNum',
-                    upper: 'noUpper', noUpper: 'upper',
-                    startConsonant: 'startVowel', startVowel: 'startConsonant',
-                    noRepeats: 'manyRepeats', manyRepeats: 'noRepeats'
-                };
-                if (contradictions[replaceId]) {
-                    return allRules.find(r => r.id === contradictions[replaceId]);
-                }
-                // Otherwise random from unused
-                const used = new Set(activeRules.map(r => r.id));
-                const pool = allRules.filter(r => !used.has(r.id));
-                return pool[Math.floor(Math.random() * pool.length)] || allRules[Math.floor(Math.random() * allRules.length)];
-            }
+            window.checkPasswordRules = function(pwd) {
+                return activeRules.every(r => ruleSatisfied(r, pwd));
+            };
 
             function renderRules() {
+                if (!rulesList) return;
                 rulesList.innerHTML = '';
                 activeRules.forEach(r => {
                     const li = document.createElement('li');
@@ -2946,33 +2923,28 @@
 
             suPassword.addEventListener('input', () => {
                 const pwd = suPassword.value;
-                let changed = false;
-                activeRules = activeRules.map(r => {
+                if (!rulesList) return;
+                activeRules.forEach(r => {
                     const li = rulesList.querySelector(`[data-rid="${r.id}"]`);
                     if (ruleSatisfied(r, pwd)) {
-                        if (li) li.classList.add('good');
-                        // Swap this rule out for a contradiction after a beat
-                        const replacement = pickNewRule(r.id);
-                        changed = true;
-                        return replacement || r;
+                        if (li) {
+                            li.classList.remove('bad');
+                            li.classList.add('good');
+                        }
                     } else {
-                        if (li) li.classList.remove('good');
-                        if (li) li.classList.add('bad');
-                        return r;
+                        if (li) {
+                            li.classList.remove('good');
+                            li.classList.add('bad');
+                        }
                     }
                 });
-                if (changed) {
-                    setTimeout(() => {
-                        renderRules();
-                        playWomp();
-                    }, 350);
-                }
                 // Strength meter always WEAK 💀
-                const variants = ['WEAK 💀', 'STILL WEAK 💀', 'EXTREMELY WEAK 💀', 'WEAKER THAN BEFORE 💀', 'TRAGICALLY WEAK 💀'];
-                strengthMeter.textContent = variants[Math.min(variants.length - 1, Math.floor(pwd.length / 4))];
+                if (strengthMeter) {
+                    strengthMeter.style.display = 'block';
+                    const variants = ['WEAK 💀', 'STILL WEAK 💀', 'EXTREMELY WEAK 💀', 'WEAKER THAN BEFORE 💀', 'TRAGICALLY WEAK 💀'];
+                    strengthMeter.textContent = variants[Math.min(variants.length - 1, Math.floor(pwd.length / 4))];
+                }
             });
-
-
         }
         if (document.getElementById('suConfirm')) {
             /* ---- Confirm Password that LIES ---- */
